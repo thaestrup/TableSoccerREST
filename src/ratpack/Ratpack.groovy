@@ -1,14 +1,12 @@
-import ratpack.groovy.sql.SqlModule
 import ratpack.groovy.template.MarkupTemplateModule
-
 import static ratpack.groovy.Groovy.groovyMarkupTemplate
 import static ratpack.groovy.Groovy.ratpack
-import static groovy.json.JsonOutput.toJson
+import static ratpack.jackson.Jackson.fromJson;
 
 ratpack {
     bindings {
         module MarkupTemplateModule
-        add(new Players("Hello there, "))
+        add(new Players())
     }
 
     handlers {
