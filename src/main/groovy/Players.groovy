@@ -1,19 +1,14 @@
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.json.JsonBuilder
+import groovy.sql.GroovyRowResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ratpack.exec.Blocking
-import ratpack.func.Function
 import ratpack.groovy.handling.GroovyChainAction
 import groovy.sql.Sql
-import ratpack.handling.Context
-import ratpack.http.Request
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-import static ratpack.jackson.Jackson.jsonNode
-import static ratpack.jackson.Jackson.fromJson;
 
 /**
  * Created by super on 04/10/2016.
@@ -60,20 +55,21 @@ class Players extends GroovyChainAction {
     @Override
     void execute() throws Exception {
 
-        path(":name") {
+        path(":id") {
             byMethod {
                 get {
                     Blocking.exec { ->
                         def sql = Sql.newInstance(DbUtil.url, DbUtil.user, DbUtil.password, DbUtil.driver)
-                        render sql.rows("SELECT * FROM tbl_players WHERE name = '" + pathTokens["name"] + "'")
+                        //TODO only return one object, not an array of json objects
+                        render sql.rows("SELECT * FROM tbl_players WHERE id = '" + pathTokens["id"] + "'")
                                 .collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
                         sql.close()
                     }
                 }
 
                 put {
-                    Blocking.get { -> parse(Player.class).map { p -> testing2(p) } }
-                            .then { i -> render i }
+                    //TODO Check for multiple instances and only use the first instance.
+                    Blocking.get{parse(Player.class).map{ p -> overwritePlayer(p) }}.then{i -> render i}
                 }
             }
         }
@@ -88,14 +84,10 @@ class Players extends GroovyChainAction {
         }
     }
 
-    //This method shoudl http://dev.mysql.com/doc/refman/5.7/en/replace.html
-    private String testing2(Player p) {
-        System.out.println(p.getName())
-
+    private String overwritePlayer(Player p) {
         def sql = Sql.newInstance(DbUtil.url, DbUtil.user, DbUtil.password, DbUtil.driver)
-        def string = sql.rows("SELECT * FROM tbl_players WHERE name = '" + p.getName() + "'").collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
+        sql.execute("REPLACE INTO tbl_players VALUES (" + p.getId() + ", '" + p.getName() + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
         sql.close()
-
-        return string
+        return "OK"
     }
 }
