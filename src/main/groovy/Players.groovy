@@ -1,11 +1,7 @@
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.json.JsonBuilder
-import groovy.sql.GroovyRowResult
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
-import groovy.sql.Sql
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -15,7 +11,6 @@ import static ratpack.util.Types.listOf;
  * Created by super on 04/10/2016.
  */
 class Players extends GroovyChainAction {
-    private final static Logger LOGGER = LoggerFactory.getLogger(Players.class);
 
     public static class Player {
         private final int id;
@@ -59,16 +54,19 @@ class Players extends GroovyChainAction {
         path(":id") {
             byMethod {
                 get {
-                    Blocking.exec { ->
-                        //TODO only return one object, not an array of json objects
-                        render DbUtil.query("SELECT * FROM tbl_players WHERE id = '" + pathTokens["id"] + "'")
-                                .collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
-                    }
+                    Blocking.get { ->
+                        //TODO Do not return SQL ID
+                        //Do not use SQL id as player id
+                        //This will effect the PUT command, because we manually need to check if it exists.
+                        DbUtil.query("SELECT * FROM tbl_players WHERE id = '" + pathTokens["id"] + "'")
+                                .first()
+                    }.then{row -> render new JsonBuilder(row).toPrettyString()}
                 }
 
                 put {
-                    //TODO Check for multiple instances and only use the first instance.
-                    Blocking.get { parse(Player.class).map { p -> overwritePlayer(p) } }.then { i -> render i }
+                    //TODO Check for multiple instances and only use the first instance: Just need error handling now
+                    parse(Player.class).then { p -> Blocking.exec { overwritePlayer(p) } }
+                    render "OK"
                 }
 
                 delete {
@@ -89,20 +87,18 @@ class Players extends GroovyChainAction {
 
                 put {
                     truncateTable();
-                    Blocking.get {
-                        parse(listOf(Player.class)).map { p -> p.stream().forEach { q -> insertPlayer(q) } }
-                    }.then { i -> render i }
+                    parse(listOf(Player.class)).then { p -> Blocking.exec { p.stream().forEach { q -> insertPlayer(q) } } }
+                    render "OK"
                 }
 
                 post {
-                    //TODO find an ordinary blaocker that can just execute
-                    Blocking.get {
-                        parse(listOf(Player.class)).map { p -> p.stream().forEach { q -> insertPlayer(q) } }
-                    }.then { i -> render i }
+                    //TODO Error handling
+                    parse(listOf(Player.class)).then { p -> Blocking.exec { p.stream().forEach { q -> insertPlayer(q) } } }
+                    render "OK"
                 }
 
                 delete {
-                    truncateTable();
+                    truncateTable()
                     render "OK"
                 }
             }
