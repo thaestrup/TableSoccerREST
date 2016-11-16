@@ -9,6 +9,7 @@ import groovy.sql.Sql
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import static ratpack.util.Types.listOf;
 
 /**
  * Created by super on 04/10/2016.
@@ -59,35 +60,72 @@ class Players extends GroovyChainAction {
             byMethod {
                 get {
                     Blocking.exec { ->
-                        def sql = Sql.newInstance(DbUtil.url, DbUtil.user, DbUtil.password, DbUtil.driver)
                         //TODO only return one object, not an array of json objects
-                        render sql.rows("SELECT * FROM tbl_players WHERE id = '" + pathTokens["id"] + "'")
+                        render DbUtil.query("SELECT * FROM tbl_players WHERE id = '" + pathTokens["id"] + "'")
                                 .collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
-                        sql.close()
                     }
                 }
 
                 put {
                     //TODO Check for multiple instances and only use the first instance.
-                    Blocking.get{parse(Player.class).map{ p -> overwritePlayer(p) }}.then{i -> render i}
+                    Blocking.get { parse(Player.class).map { p -> overwritePlayer(p) } }.then { i -> render i }
+                }
+
+                delete {
+                    delete(pathTokens["id"]);
+                    render "OK"
                 }
             }
         }
 
-        get {
-            Blocking.exec { ->
-                def sql = Sql.newInstance(DbUtil.url, DbUtil.user, DbUtil.password, DbUtil.driver)
-                render sql.rows("SELECT * FROM tbl_players")
-                        .collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
-                sql.close()
+        all {
+            byMethod {
+                get {
+                    Blocking.exec { ->
+                        render DbUtil.query("SELECT * FROM tbl_players")
+                                .collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
+                    }
+                }
+
+                put {
+                    truncateTable();
+                    Blocking.get {
+                        parse(listOf(Player.class)).map { p -> p.stream().forEach { q -> insertPlayer(q) } }
+                    }.then { i -> render i }
+                }
+
+                post {
+                    //TODO find an ordinary blaocker that can just execute
+                    Blocking.get {
+                        parse(listOf(Player.class)).map { p -> p.stream().forEach { q -> insertPlayer(q) } }
+                    }.then { i -> render i }
+                }
+
+                delete {
+                    truncateTable();
+                    render "OK"
+                }
             }
         }
     }
 
     private String overwritePlayer(Player p) {
-        def sql = Sql.newInstance(DbUtil.url, DbUtil.user, DbUtil.password, DbUtil.driver)
-        sql.execute("REPLACE INTO tbl_players VALUES (" + p.getId() + ", '" + p.getName() + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
-        sql.close()
+        DbUtil.execute("REPLACE INTO tbl_players VALUES (" + p.getId() + ", '" + p.getName() + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
+        return "OK"
+    }
+
+    private String insertPlayer(Player p) {
+        DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + p.getName() + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
+        return "OK"
+    }
+
+    private String truncateTable() {
+        DbUtil.execute("Truncate table tbl_players")
+        return "OK"
+    }
+
+    private String delete(String id) {
+        DbUtil.execute("DELETE FROM tbl_players where id = " + id)
         return "OK"
     }
 }
