@@ -18,6 +18,12 @@ ratpack {
             all chain(registry.get(Players))
         }
 
+        prefix("api") {
+            all {
+                render groovyMarkupTemplate("api.gtpl")
+            }
+        }
+
         files { dir "public" }
     }
 }
