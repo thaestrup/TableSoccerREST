@@ -1,11 +1,9 @@
 import com.fasterxml.jackson.annotation.JsonProperty
-import groovy.json.JsonBuilder
+import groovy.sql.GroovyRowResult
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
-
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import static ratpack.util.Types.listOf;
+import static ratpack.jackson.Jackson.json;
 
 /**
  * Created by super on 04/10/2016.
@@ -13,26 +11,24 @@ import static ratpack.util.Types.listOf;
 class Players extends GroovyChainAction {
 
     public static class Player {
-        private final int id;
         private final String name;
         private final boolean playerReady;
-        private final LocalDateTime oprettet;
+        private final String oprettet;
 
-        public Player(@JsonProperty("id") String id,
-                      @JsonProperty("name") String name,
+        public Player(@JsonProperty("name") String name,
                       @JsonProperty("playerReady") String playerReady,
                       @JsonProperty("oprettet") String oprettet) {
-            this.id = Integer.valueOf(id)
             this.name = name;
             this.playerReady = Boolean.valueOf(playerReady);
-
-            //2015-08-03T11:47:47+0000
-            DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
-            this.oprettet = LocalDateTime.parse(oprettet, pattern);
+            this.oprettet = oprettet;
         }
 
-        int getId() {
-            return id
+        public Player(GroovyRowResult row) {
+            if (row.containsKey("name")) {
+                this.name = row.getProperty("name");
+            }
+            this.playerReady = row.getProperty("playerReady");
+            this.oprettet = row.getProperty("oprettet");
         }
 
         String getName() {
@@ -43,7 +39,7 @@ class Players extends GroovyChainAction {
             return playerReady
         }
 
-        LocalDateTime getOprettet() {
+        String getOprettet() {
             return oprettet
         }
     }
@@ -51,26 +47,23 @@ class Players extends GroovyChainAction {
     @Override
     void execute() throws Exception {
 
-        path(":id") {
+        path(":name") {
             byMethod {
                 get {
                     Blocking.get { ->
-                        //TODO Do not return SQL ID
-                        //Do not use SQL id as player id
-                        //This will effect the PUT command, because we manually need to check if it exists.
-                        DbUtil.query("SELECT * FROM tbl_players WHERE id = '" + pathTokens["id"] + "'")
+                        DbUtil.query("SELECT * FROM tbl_players WHERE name = '" + pathTokens["name"] + "'")
                                 .first()
-                    }.then{row -> render new JsonBuilder(row).toPrettyString()}
+                    }.then { row -> render json(new Player(row)) }
                 }
 
                 put {
                     //TODO Check for multiple instances and only use the first instance: Just need error handling now
-                    parse(Player.class).then { p -> Blocking.exec { overwritePlayer(p) } }
+                    parse(Player.class).then { p -> Blocking.exec { overwritePlayer(p, pathTokens["name"]) } }
                     render "OK"
                 }
 
                 delete {
-                    delete(pathTokens["id"]);
+                    delete(pathTokens["name"]);
                     render "OK"
                 }
             }
@@ -80,20 +73,27 @@ class Players extends GroovyChainAction {
             byMethod {
                 get {
                     Blocking.exec { ->
-                        render DbUtil.query("SELECT * FROM tbl_players")
-                                .collect { row -> new JsonBuilder(row).toPrettyString() }.toString()
+                        render json(DbUtil.query("SELECT * FROM tbl_players").collect { row -> new Player(row) })
                     }
                 }
 
                 put {
                     truncateTable();
-                    parse(listOf(Player.class)).then { p -> Blocking.exec { p.stream().forEach { q -> insertPlayer(q) } } }
+                    parse(listOf(Player.class)).then { p ->
+                        Blocking.exec {
+                            p.stream().forEach { q -> insertPlayer(q) }
+                        }
+                    }
                     render "OK"
                 }
 
                 post {
                     //TODO Error handling
-                    parse(listOf(Player.class)).then { p -> Blocking.exec { p.stream().forEach { q -> insertPlayer(q) } } }
+                    parse(listOf(Player.class)).then { p ->
+                        Blocking.exec {
+                            p.stream().forEach { q -> insertPlayer(q) }
+                        }
+                    }
                     render "OK"
                 }
 
@@ -105,8 +105,8 @@ class Players extends GroovyChainAction {
         }
     }
 
-    private String overwritePlayer(Player p) {
-        DbUtil.execute("REPLACE INTO tbl_players VALUES (" + p.getId() + ", '" + p.getName() + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
+    private String overwritePlayer(Player p, String name) {
+        DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + name + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
         return "OK"
     }
 
@@ -120,8 +120,8 @@ class Players extends GroovyChainAction {
         return "OK"
     }
 
-    private String delete(String id) {
-        DbUtil.execute("DELETE FROM tbl_players where id = " + id)
+    private String delete(String name) {
+        DbUtil.execute("DELETE FROM tbl_players where name = '" + name + "'")
         return "OK"
     }
 }
