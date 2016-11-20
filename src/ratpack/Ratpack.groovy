@@ -1,7 +1,6 @@
 import ratpack.groovy.template.MarkupTemplateModule
 import static ratpack.groovy.Groovy.groovyMarkupTemplate
 import static ratpack.groovy.Groovy.ratpack
-import static ratpack.jackson.Jackson.fromJson;
 
 ratpack {
     bindings {

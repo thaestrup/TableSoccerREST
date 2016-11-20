@@ -13,10 +13,23 @@ public class DbUtil {
     public static final String password = "";
     public static final String driver = "com.mysql.jdbc.Driver";
 
-    public static void execute(String query) throws SQLException, ClassNotFoundException {
-        Sql sql = Sql.newInstance(url, user, password, driver);
-        sql.execute(query);
-        sql.close();
+    public static String execute(String query) {
+        Sql sql = null;
+        try {
+            sql = Sql.newInstance(url, user, password, driver);
+            sql.execute(query);
+            sql.close();
+        } catch (ClassNotFoundException e) {
+            return e.toString();
+        } catch (SQLException e) {
+            return e.toString();
+        } finally {
+            if (sql != null) {
+                sql.close();
+            }
+        }
+        
+        return "OK";
     }
 
     public static List<GroovyRowResult> query(String query) throws SQLException, ClassNotFoundException {

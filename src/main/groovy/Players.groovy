@@ -1,5 +1,7 @@
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.sql.GroovyRowResult
+import ratpack.error.ServerErrorHandler
+import ratpack.error.internal.DefaultProductionErrorHandler
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
 import static ratpack.util.Types.listOf;
@@ -45,8 +47,7 @@ class Players extends GroovyChainAction {
     }
 
     @Override
-    void execute() throws Exception {
-
+    void execute() {
         path(":name") {
             byMethod {
                 get {
@@ -57,14 +58,17 @@ class Players extends GroovyChainAction {
                 }
 
                 put {
-                    //TODO Check for multiple instances and only use the first instance: Just need error handling now
-                    parse(Player.class).then { p -> Blocking.exec { overwritePlayer(p, pathTokens["name"]) } }
-                    render "OK"
+                    parse(Player.class).onError{
+                        e -> render e.toString()
+                    }.then { p ->
+                        Blocking.exec {
+                            render DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + pathTokens["name"] + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
+                        }
+                    }
                 }
 
                 delete {
-                    delete(pathTokens["name"]);
-                    render "OK"
+                    render DbUtil.execute("DELETE FROM tbl_players where name = '" + pathTokens["name"] + "'")
                 }
             }
         }
@@ -78,50 +82,34 @@ class Players extends GroovyChainAction {
                 }
 
                 put {
-                    truncateTable();
-                    parse(listOf(Player.class)).then { p ->
+                    parse(listOf(Player.class)).onError{
+                        e -> render e.toString()
+                    }.then { p ->
                         Blocking.exec {
-                            p.stream().forEach { q -> insertPlayer(q) }
+                            DbUtil.execute("Truncate table tbl_players")
+                            p.stream().forEach { q ->
+                                render DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "')")
+                            }
                         }
                     }
-                    render "OK"
                 }
 
                 post {
-                    //TODO Error handling
-                    parse(listOf(Player.class)).then { p ->
+                    parse(listOf(Player.class)).onError{
+                        e -> render e.toString()
+                    }.then { p ->
                         Blocking.exec {
-                            p.stream().forEach { q -> insertPlayer(q) }
+                            p.stream().forEach { q ->
+                                render DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "')")
+                            }
                         }
                     }
-                    render "OK"
                 }
 
                 delete {
-                    truncateTable()
-                    render "OK"
+                    render DbUtil.execute("Truncate table tbl_players")
                 }
             }
         }
-    }
-
-    private String overwritePlayer(Player p, String name) {
-        DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + name + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
-        return "OK"
-    }
-
-    private String insertPlayer(Player p) {
-        DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + p.getName() + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
-        return "OK"
-    }
-
-    private String truncateTable() {
-        DbUtil.execute("Truncate table tbl_players")
-        return "OK"
-    }
-
-    private String delete(String name) {
-        DbUtil.execute("DELETE FROM tbl_players where name = '" + name + "'")
-        return "OK"
     }
 }
