@@ -1,9 +1,11 @@
-import com.fasterxml.jackson.annotation.JsonProperty
+import Model.Player
 import groovy.sql.GroovyRowResult
-import ratpack.error.ServerErrorHandler
-import ratpack.error.internal.DefaultProductionErrorHandler
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
+import ratpack.jackson.JsonRender
+
+import java.util.stream.Collectors
+
 import static ratpack.util.Types.listOf;
 import static ratpack.jackson.Jackson.json;
 
@@ -12,48 +14,13 @@ import static ratpack.jackson.Jackson.json;
  */
 class Players extends GroovyChainAction {
 
-    public static class Player {
-        private final String name;
-        private final boolean playerReady;
-        private final String oprettet;
-
-        public Player(@JsonProperty("name") String name,
-                      @JsonProperty("playerReady") String playerReady,
-                      @JsonProperty("oprettet") String oprettet) {
-            this.name = name;
-            this.playerReady = Boolean.valueOf(playerReady);
-            this.oprettet = oprettet;
-        }
-
-        public Player(GroovyRowResult row) {
-            if (row.containsKey("name")) {
-                this.name = row.getProperty("name");
-            }
-            this.playerReady = row.getProperty("playerReady");
-            this.oprettet = row.getProperty("oprettet");
-        }
-
-        String getName() {
-            return name
-        }
-
-        boolean getPlayerReady() {
-            return playerReady
-        }
-
-        String getOprettet() {
-            return oprettet
-        }
-    }
-
     @Override
     void execute() {
         path(":name") {
             byMethod {
                 get {
                     Blocking.get { ->
-                        DbUtil.query("SELECT * FROM tbl_players WHERE name = '" + pathTokens["name"] + "'")
-                                .first()
+                        getPlayer(pathTokens["name"])
                     }.then { row -> render json(new Player(row)) }
                 }
 
@@ -61,14 +28,16 @@ class Players extends GroovyChainAction {
                     parse(Player.class).onError{
                         e -> render e.toString()
                     }.then { p ->
-                        Blocking.exec {
-                            render DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + pathTokens["name"] + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
-                        }
+                        Blocking.get {
+                            overwritePlayer(p, pathTokens["name"])
+                        }.then{result -> render result}
                     }
                 }
 
                 delete {
-                    render DbUtil.execute("DELETE FROM tbl_players where name = '" + pathTokens["name"] + "'")
+                    Blocking.get {
+                        deletePlayer(pathTokens["name"])
+                    }.then{result -> render result}
                 }
             }
         }
@@ -76,21 +45,21 @@ class Players extends GroovyChainAction {
         all {
             byMethod {
                 get {
-                    Blocking.exec { ->
-                        render json(DbUtil.query("SELECT * FROM tbl_players").collect { row -> new Player(row) })
-                    }
+                    Blocking.get {
+                        getAllPlayers()
+                    }.then{result -> render result}
                 }
 
                 put {
                     parse(listOf(Player.class)).onError{
                         e -> render e.toString()
                     }.then { p ->
-                        Blocking.exec {
-                            DbUtil.execute("Truncate table tbl_players")
-                            p.stream().forEach { q ->
-                                render DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "')")
-                            }
-                        }
+                        Blocking.get {
+                            def result = cleanPlayerTable()
+                            p.stream().map { q ->
+                                insertPlayer(q)
+                            }.collect(Collectors.joining(System.lineSeparator(), result + System.lineSeparator(), ""))
+                        }.then{result -> render result}
                     }
                 }
 
@@ -98,18 +67,45 @@ class Players extends GroovyChainAction {
                     parse(listOf(Player.class)).onError{
                         e -> render e.toString()
                     }.then { p ->
-                        Blocking.exec {
-                            p.stream().forEach { q ->
-                                render DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "')")
-                            }
-                        }
+                        Blocking.get {
+                            p.stream().map { q ->
+                                insertPlayer(q)
+                            }.collect(Collectors.joining(System.lineSeparator()))
+                        }.then{result -> render result}
                     }
                 }
 
                 delete {
-                    render DbUtil.execute("Truncate table tbl_players")
+                    Blocking.get {
+                        cleanPlayerTable()
+                    }.then{result -> render result}
                 }
             }
         }
+    }
+
+    private GroovyRowResult getPlayer(String player) {
+        DbUtil.query("SELECT * FROM tbl_players WHERE name = '" + player + "'")
+                .first()
+    }
+
+    private String overwritePlayer(Player p, String player) {
+        "overwritePlayer: " + player + ", result: " + DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + player + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
+    }
+
+    private String deletePlayer(String player) {
+        "deletePlayer: " + player + ", result: " + DbUtil.execute("DELETE FROM tbl_players where name = '" + player + "'")
+    }
+
+    private JsonRender getAllPlayers() {
+        json(DbUtil.query("SELECT * FROM tbl_players").collect { row -> new Player(row) })
+    }
+
+    private String cleanPlayerTable() {
+        "cleanPlayerTable: " + DbUtil.execute("Truncate table tbl_players")
+    }
+
+    private String insertPlayer(Player q) {
+        "insertPlayer: " + q.getName() + ", result: " + DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "')")
     }
 }
