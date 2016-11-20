@@ -21,6 +21,7 @@ html {
       p 'Implements the HTTP methods: Get, Put, Post and delete'
       p 'As described here: https://en.wikipedia.org/wiki/Representational_state_transfer'
       p 'If you provide a name in the message body of PUT on a named player (Ex: /players/alsk) then the name in the body is ignored.'
+      p '[{"name":"alsk","playerReady":true,"oprettet":"2016-08-03 13:47:47.0"},{"name":"monn","playerReady":false,"oprettet":"2016-08-03 13:47:50.0"},{"name":"dwp","playerReady":false,"oprettet":"2016-08-03 13:47:55.0"},{"name":"cani","playerReady":false,"oprettet":"2016-08-03 13:47:59.0"},{"name":"frmi","playerReady":false,"oprettet":"2016-08-03 13:56:01.0"},{"name":"frmi1","playerReady":false,"oprettet":"2016-08-03 15:56:01.0"}]'
     }
 
     footer {}
