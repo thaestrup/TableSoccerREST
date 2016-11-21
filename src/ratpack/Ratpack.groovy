@@ -6,6 +6,7 @@ ratpack {
     bindings {
         module MarkupTemplateModule
         add(new Players())
+        add(new Games())
     }
 
     handlers {
@@ -15,6 +16,10 @@ ratpack {
 
         prefix("players") {
             all chain(registry.get(Players))
+        }
+
+        prefix("games") {
+            all chain(registry.get(Games))
         }
 
         prefix("api") {
