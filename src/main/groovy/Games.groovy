@@ -1,4 +1,5 @@
 import Model.Game
+import groovy.sql.GroovyRowResult
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
 import ratpack.jackson.JsonRender
@@ -12,31 +13,31 @@ class Games extends GroovyChainAction {
 
     @Override
     void execute() {
-//        path(":id") {
-//            byMethod {
-//                get {
-//                    Blocking.get { ->
-//                        getPlayer(pathTokens["id"])
-//                    }.then { row -> render json(new Player(row)) }
-//                }
+        path(":id") {
+            byMethod {
+                get {
+                    Blocking.get { ->
+                        getGame(pathTokens["id"])
+                    }.then { row -> render json(new Game(row)) }
+                }
 
-//                put {
-//                    parse(Player.class).onError{
-//                        e -> render e.toString()
-//                    }.then { p ->
-//                        Blocking.get {
-//                            overwritePlayer(p, pathTokens["id"])
-//                        }.then{result -> render result}
-//                    }
-//                }
+                put {
+                    parse(Game.class).onError{
+                        e -> render e.toString()
+                    }.then { p ->
+                        Blocking.get {
+                            overwriteGame(p, pathTokens["id"])
+                        }.then{result -> render result}
+                    }
+                }
 //
 //                delete {
 //                    Blocking.get {
 //                        deletePlayer(pathTokens["id"])
 //                    }.then{result -> render result}
 //                }
-//            }
-//        }
+            }
+        }
 
         all {
             byMethod {
@@ -80,15 +81,15 @@ class Games extends GroovyChainAction {
         }
     }
 
-//    private GroovyRowResult getPlayer(String player) {
-//        DbUtil.query("SELECT * FROM tbl_players WHERE name = '" + player + "'")
-//                .first()
-//    }
-//
-//    private String overwritePlayer(Player p, String player) {
-//        "overwritePlayer: " + player + ", result: " + DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + player + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
-//    }
-//
+    private GroovyRowResult getGame(String id) {
+        DbUtil.query("SELECT * FROM tbl_fights WHERE id = '" + id + "'")
+                .first()
+    }
+
+    private String overwriteGame(Game game, String id) {
+        "overwriteGame: " + id + ", result: " + DbUtil.execute("REPLACE INTO tbl_fights (id, player_red_1, player_red_2, player_blue_1, player_blue_2, timestamp, match_winner, points_at_steake, winning_table) VALUES ('" + id + "', '" + game.getPlayer_red_1() + "', '" + game.getPlayer_red_2() + "', '" + game.getPlayer_blue_1() + "', '" + game.getPlayer_blue_2() + "', '" + game.getLastUpdated() + "', '" + game.getMatch_winner() + "', '" + game.getPoints_at_stake() + "', '" + game.getWinning_table() + "')")
+    }
+
 //    private String deletePlayer(String player) {
 //        "deletePlayer: " + player + ", result: " + DbUtil.execute("DELETE FROM tbl_players where name = '" + player + "'")
 //    }

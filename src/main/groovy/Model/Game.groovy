@@ -15,14 +15,16 @@ public class Game {
     private final String lastUpdated;
     private final String match_winner;
     private final int winning_table;
+    private final int points_at_stake;
 
     Game(@JsonProperty("id") String id,
          @JsonProperty("player_red_1") String player_red_1,
          @JsonProperty("player_red_2") String player_red_2,
          @JsonProperty("player_blue_1") String player_blue_1,
          @JsonProperty("player_blue_2") String player_blue_2,
-         @JsonProperty("timestamp") String lastUpdated,
+         @JsonProperty("lastUpdated") String lastUpdated,
          @JsonProperty("match_winner") String match_winner,
+         @JsonProperty("points_at_stake") String points_at_stake,
          @JsonProperty("winning_table") String winning_table) {
         this.id = Integer.valueOf(id)
         this.player_red_1 = player_red_1
@@ -32,6 +34,7 @@ public class Game {
         this.lastUpdated = lastUpdated
         this.match_winner = match_winner
         this.winning_table = Integer.valueOf(winning_table)
+        this.points_at_stake = Integer.valueOf(points_at_stake)
     }
 
     public Game(GroovyRowResult row) {
@@ -43,6 +46,11 @@ public class Game {
         this.lastUpdated = row.getProperty("timestamp")
         this.match_winner = row.getProperty("match_winner")
         this.winning_table = Integer.valueOf(row.getProperty("winning_table"))
+        this.points_at_stake = Integer.valueOf(row.getProperty("points_at_steake"))
+    }
+
+    int getPoints_at_stake() {
+        return points_at_stake
     }
 
     int getId() {
