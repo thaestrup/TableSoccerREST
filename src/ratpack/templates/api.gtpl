@@ -64,6 +64,12 @@ html {
 
     }
 
+    section {
+      h2 'Games'
+      p 'same as with players, the game object is just like:'
+      p '{"id":262,"player_red_1":"MOKL","player_red_2":"fadfsa","player_blue_1":"asdasd","player_blue_2":"cjo","lastUpdated":"2016-10-22 21:21:30.0","match_winner":"red","points_at_stake":1,"winning_table":1}'
+     }
+
     footer {}
   }
 }
