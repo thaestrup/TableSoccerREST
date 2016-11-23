@@ -47,7 +47,10 @@ class Games extends GroovyChainAction {
                 get {
                     Blocking.get {
                         getAllGames()
-                    }.then{result -> render result}
+                    }.then{result ->
+                        response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
+                        render result
+                    }
                 }
 
                 put {

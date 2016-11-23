@@ -47,7 +47,11 @@ class Players extends GroovyChainAction {
                 get {
                     Blocking.get {
                         getAllPlayers()
-                    }.then{result -> render result}
+                    }.then{result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render result
+                    }
+
                 }
 
                 put {
