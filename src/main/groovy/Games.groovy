@@ -21,7 +21,10 @@ class Games extends GroovyChainAction {
                 get {
                     Blocking.get { ->
                         getGame(pathTokens["id"])
-                    }.then { row -> render json(new Game(row)) }
+                    }.then { result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render json(new Game(result))
+                    }
                 }
 
                 put {
@@ -30,14 +33,20 @@ class Games extends GroovyChainAction {
                     }.then { p ->
                         Blocking.get {
                             overwriteGame(p, pathTokens["id"])
-                        }.then{result -> render result}
+                        }.then{result ->
+                            response.headers.set('Access-Control-Allow-Origin', '*')
+                            render result
+                        }
                     }
                 }
 
                 delete {
                     Blocking.get {
                         deleteGame(pathTokens["id"])
-                    }.then{result -> render result}
+                    }.then{result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render result
+                    }
                 }
             }
         }
@@ -48,7 +57,7 @@ class Games extends GroovyChainAction {
                     Blocking.get {
                         getAllGames()
                     }.then{result ->
-                        response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
+                        response.headers.set('Access-Control-Allow-Origin', '*')
                         render result
                     }
                 }
@@ -62,7 +71,10 @@ class Games extends GroovyChainAction {
                             p.stream().map { q ->
                                 insertGame(q)
                             }.collect(Collectors.joining(System.lineSeparator(), result + System.lineSeparator(), ""))
-                        }.then{result -> render result}
+                        }.then{result ->
+                            response.headers.set('Access-Control-Allow-Origin', '*')
+                            render result
+                        }
                     }
                 }
 
@@ -74,14 +86,20 @@ class Games extends GroovyChainAction {
                             p.stream().map { q ->
                                 insertGame(q)
                             }.collect(Collectors.joining(System.lineSeparator()))
-                        }.then{result -> render result}
+                        }.then{result ->
+                            response.headers.set('Access-Control-Allow-Origin', '*')
+                            render result
+                        }
                     }
                 }
 
                 delete {
                     Blocking.get {
                         cleanGameTable()
-                    }.then{result -> render result}
+                    }.then{result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render result
+                    }
                 }
             }
         }

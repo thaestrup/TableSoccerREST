@@ -21,23 +21,32 @@ class Players extends GroovyChainAction {
                 get {
                     Blocking.get { ->
                         getPlayer(pathTokens["name"])
-                    }.then { row -> render json(new Player(row)) }
+                    }.then { result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render json(new Player(result))
+                    }
                 }
 
                 put {
-                    parse(Player.class).onError{
+                    parse(Player.class).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
                             overwritePlayer(p, pathTokens["name"])
-                        }.then{result -> render result}
+                        }.then { result ->
+                            response.headers.set('Access-Control-Allow-Origin', '*')
+                            render result
+                        }
                     }
                 }
 
                 delete {
                     Blocking.get {
                         deletePlayer(pathTokens["name"])
-                    }.then{result -> render result}
+                    }.then { result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render result
+                    }
                 }
             }
         }
@@ -47,7 +56,7 @@ class Players extends GroovyChainAction {
                 get {
                     Blocking.get {
                         getAllPlayers()
-                    }.then{result ->
+                    }.then { result ->
                         response.headers.set('Access-Control-Allow-Origin', '*')
                         render result
                     }
@@ -55,7 +64,7 @@ class Players extends GroovyChainAction {
                 }
 
                 put {
-                    parse(listOf(Player.class)).onError{
+                    parse(listOf(Player.class)).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
@@ -63,26 +72,35 @@ class Players extends GroovyChainAction {
                             p.stream().map { q ->
                                 insertPlayer(q)
                             }.collect(Collectors.joining(System.lineSeparator(), result + System.lineSeparator(), ""))
-                        }.then{result -> render result}
+                        }.then { result ->
+                            response.headers.set('Access-Control-Allow-Origin', '*')
+                            render result
+                        }
                     }
                 }
 
                 post {
-                    parse(listOf(Player.class)).onError{
+                    parse(listOf(Player.class)).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
                             p.stream().map { q ->
                                 insertPlayer(q)
                             }.collect(Collectors.joining(System.lineSeparator()))
-                        }.then{result -> render result}
+                        }.then { result ->
+                            response.headers.set('Access-Control-Allow-Origin', '*')
+                            render result
+                        }
                     }
                 }
 
                 delete {
                     Blocking.get {
                         cleanPlayerTable()
-                    }.then{result -> render result}
+                    }.then { result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
+                        render result
+                    }
                 }
             }
         }
