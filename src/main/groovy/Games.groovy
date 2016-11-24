@@ -117,7 +117,7 @@ class Games extends GroovyChainAction {
     }
 
     private String generateGames(PostGameRequest game) {
-        String
+        StringBuffer result = new StringBuffer();
 
         if (game.generationMethod == PostGameRequest.GenerationMethod.GIVEN) {
 
@@ -125,7 +125,11 @@ class Games extends GroovyChainAction {
 
         } else if (game.generationMethod == PostGameRequest.GenerationMethod.RANDOM) {
 
+        } else {
+            result.append("generationMethod: ").append(game.generationMethod).append(" not known.")
         }
+
+        return result;
     }
 
     private GroovyRowResult getGame(String id) {
