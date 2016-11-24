@@ -78,13 +78,79 @@ html {
       p '(Voluntary, if generationMethod GIVEN: If empty then use players from players resource that is "Ready") players = Se example below'
       p 'Example: '
       p '{
-           "generationMethod" : "RANDOM", "numberOfGames":2,
-           "games":[
-         {"player_red_1":"MOKL","player_red_2":"fadfsa","player_blue_1":"asdasd","player_blue_2":"cjo","lastUpdated":"2016-10-22 21:21:30.0","match_winner":"red","points_at_stake":1,"winning_table":1},
-         {"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:36.0","match_winner":"red","points_at_stake":1,"winning_table":1},
-         {"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"red","points_at_stake":1,"winning_table":1},
-         {"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"blue","points_at_stake":1,"winning_table":1}
-         ]
+            "generationMethod":"RANDOM",
+            "numberOfGames":2,
+            "games":[
+               {
+                  "player_red_1":"MOKL",
+                  "player_red_2":"fadfsa",
+                  "player_blue_1":"asdasd",
+                  "player_blue_2":"cjo",
+                  "lastUpdated":"2016-10-22 21:21:30.0",
+                  "match_winner":"red",
+                  "points_at_stake":1,
+                  "winning_table":1
+               },
+               {
+                  "player_red_1":"peeh",
+                  "player_red_2":"jmn",
+                  "player_blue_1":"KRBA",
+                  "player_blue_2":"Q1RS",
+                  "lastUpdated":"2016-10-22 21:21:36.0",
+                  "match_winner":"red",
+                  "points_at_stake":1,
+                  "winning_table":1
+               },
+               {
+                  "player_red_1":"peeh",
+                  "player_red_2":"jmn",
+                  "player_blue_1":"KRBA",
+                  "player_blue_2":"Q1RS",
+                  "lastUpdated":"2016-10-22 21:21:37.0",
+                  "match_winner":"red",
+                  "points_at_stake":1,
+                  "winning_table":1
+               },
+               {
+                  "player_red_1":"peeh",
+                  "player_red_2":"jmn",
+                  "player_blue_1":"KRBA",
+                  "player_blue_2":"Q1RS",
+                  "lastUpdated":"2016-10-22 21:21:37.0",
+                  "match_winner":"blue",
+                  "points_at_stake":1,
+                  "winning_table":1
+               }
+            ],
+            "players":[
+               {
+                  "name":"dwp1"
+               },
+               {
+                  "name":"cani"
+               },
+               {
+                  "name":"frmi"
+               },
+               {
+                  "name":"frmi1"
+               },
+               {
+                  "name":"alsk"
+               },
+               {
+                  "name":"monn"
+               },
+               {
+                  "name":"asfasfaf"
+               },
+               {
+                  "name":"fgdgdfg"
+               },
+               {
+                  "name":"fgdgdfg1"
+               }
+            ]
          }'
      }
 
