@@ -21,6 +21,7 @@ class Games extends GroovyChainAction {
             byMethod {
                 options {
                     response.headers.set('Access-Control-Allow-Methods:', 'GET, OPTIONS, PUT, DELETE')
+                    response.headers.set('Access-Control-Allow-Origin', '*')
                     render "OK"
                 }
 
@@ -61,6 +62,7 @@ class Games extends GroovyChainAction {
             byMethod {
                 options {
                     response.headers.set('Access-Control-Allow-Methods:', 'POST, GET, OPTIONS, PUT, DELETE')
+                    response.headers.set('Access-Control-Allow-Origin', '*')
                     render "OK"
                 }
 
@@ -115,7 +117,15 @@ class Games extends GroovyChainAction {
     }
 
     private String generateGames(PostGameRequest game) {
-        "TESTING"
+        String
+
+        if (game.generationMethod == PostGameRequest.GenerationMethod.GIVEN) {
+
+        } else if (game.generationMethod == PostGameRequest.GenerationMethod.LASTFIRST) {
+
+        } else if (game.generationMethod == PostGameRequest.GenerationMethod.RANDOM) {
+
+        }
     }
 
     private GroovyRowResult getGame(String id) {
