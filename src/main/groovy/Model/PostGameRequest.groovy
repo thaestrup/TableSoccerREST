@@ -15,13 +15,20 @@ public class PostGameRequest {
     private final GenerationMethod generationMethod;
     private final int numberOfGames;
     private final List<Game> games;
+    private final List<Player> players;
 
     PostGameRequest(@JsonProperty("generationMethod") GenerationMethod generationMethod,
                     @JsonProperty("numberOfGames") int numberOfGames,
-                    @JsonProperty("games") List<Game> games) {
+                    @JsonProperty("games") List<Game> games,
+                    @JsonProperty("players") List<Player> players) {
         this.generationMethod = generationMethod
         this.numberOfGames = numberOfGames
         this.games = games
+        this.players = players
+    }
+
+    List<Player> getPlayers() {
+        return players
     }
 
     GenerationMethod getGenerationMethod() {
