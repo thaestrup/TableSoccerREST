@@ -26,7 +26,7 @@ public class Game {
          @JsonProperty("match_winner") String match_winner,
          @JsonProperty("points_at_stake") String points_at_stake,
          @JsonProperty("winning_table") String winning_table) {
-        this.id = Integer.valueOf(id)
+        this.id = id != null ? Integer.valueOf(id) : -1
         this.player_red_1 = player_red_1
         this.player_red_2 = player_red_2
         this.player_blue_1 = player_blue_1

@@ -66,8 +66,26 @@ html {
 
     section {
       h2 'Games'
+      h4 'http://localhost:5050/games/'
       p 'same as with players, the game object is just like:'
       p '{"id":262,"player_red_1":"MOKL","player_red_2":"fadfsa","player_blue_1":"asdasd","player_blue_2":"cjo","lastUpdated":"2016-10-22 21:21:30.0","match_winner":"red","points_at_stake":1,"winning_table":1}'
+
+      h3 'POST'
+      h4 'http://localhost:5050/games/'
+      p '(Mandatory) generationMethod = {RANDOM, LASTFIRST, GIVEN}'
+      p '(Mandatory in all other cases but GIVEN) numberOfGames = Integer'
+      p '(Only used if "GIVEN" is chosen in generationMethod) games = See example below'
+      p '(Voluntary, if generationMethod GIVEN: If empty then use players from ready resource that is "Ready") players = Se example below'
+      p 'Example: '
+      p '{
+           "generationMethod" : "RANDOM", "numberOfGames":2,
+           "games":[
+         {"player_red_1":"MOKL","player_red_2":"fadfsa","player_blue_1":"asdasd","player_blue_2":"cjo","lastUpdated":"2016-10-22 21:21:30.0","match_winner":"red","points_at_stake":1,"winning_table":1},
+         {"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:36.0","match_winner":"red","points_at_stake":1,"winning_table":1},
+         {"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"red","points_at_stake":1,"winning_table":1},
+         {"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"blue","points_at_stake":1,"winning_table":1}
+         ]
+         }'
      }
 
     footer {}

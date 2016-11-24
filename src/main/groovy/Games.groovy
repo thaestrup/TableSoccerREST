@@ -1,4 +1,5 @@
 import Model.Game
+import Model.PostGameRequest
 import groovy.sql.GroovyRowResult
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
@@ -89,13 +90,11 @@ class Games extends GroovyChainAction {
                 }
 
                 post {
-                    parse(listOf(Game.class)).onError{
+                    parse(PostGameRequest.class).onError{
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
-                            p.stream().map { q ->
-                                insertGame(q)
-                            }.collect(Collectors.joining(System.lineSeparator()))
+                            generateGames(p)
                         }.then{result ->
                             response.headers.set('Access-Control-Allow-Origin', '*')
                             render result
@@ -113,6 +112,10 @@ class Games extends GroovyChainAction {
                 }
             }
         }
+    }
+
+    private String generateGames(PostGameRequest game) {
+        "TESTING"
     }
 
     private GroovyRowResult getGame(String id) {
