@@ -18,6 +18,11 @@ class Games extends GroovyChainAction {
     void execute() {
         path(":id") {
             byMethod {
+                options {
+                    response.headers.set('Access-Control-Allow-Methods:', 'GET, OPTIONS, PUT, DELETE')
+                    render "OK"
+                }
+
                 get {
                     Blocking.get { ->
                         getGame(pathTokens["id"])
@@ -53,6 +58,11 @@ class Games extends GroovyChainAction {
 
         all {
             byMethod {
+                options {
+                    response.headers.set('Access-Control-Allow-Methods:', 'POST, GET, OPTIONS, PUT, DELETE')
+                    render "OK"
+                }
+
                 get {
                     Blocking.get {
                         getAllGames()
