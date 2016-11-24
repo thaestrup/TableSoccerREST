@@ -75,7 +75,7 @@ html {
       p '(Mandatory) generationMethod = {RANDOM, LASTFIRST, GIVEN}'
       p '(Mandatory in all other cases but GIVEN) numberOfGames = Integer'
       p '(Only used if "GIVEN" is chosen in generationMethod) games = See example below'
-      p '(Voluntary, if generationMethod GIVEN: If empty then use players from ready resource that is "Ready") players = Se example below'
+      p '(Voluntary, if generationMethod GIVEN: If empty then use players from players resource that is "Ready") players = Se example below'
       p 'Example: '
       p '{
            "generationMethod" : "RANDOM", "numberOfGames":2,
