@@ -5,6 +5,7 @@ import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
 import ratpack.jackson.JsonRender
 
+import java.sql.Timestamp
 import java.util.stream.Collectors
 
 import static ratpack.jackson.Jackson.json
@@ -35,12 +36,12 @@ class Games extends GroovyChainAction {
                 }
 
                 put {
-                    parse(Game.class).onError{
+                    parse(Game.class).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
                             overwriteGame(p, pathTokens["id"])
-                        }.then{result ->
+                        }.then { result ->
                             response.headers.set('Access-Control-Allow-Origin', '*')
                             render result
                         }
@@ -50,7 +51,7 @@ class Games extends GroovyChainAction {
                 delete {
                     Blocking.get {
                         deleteGame(pathTokens["id"])
-                    }.then{result ->
+                    }.then { result ->
                         response.headers.set('Access-Control-Allow-Origin', '*')
                         render result
                     }
@@ -69,14 +70,14 @@ class Games extends GroovyChainAction {
                 get {
                     Blocking.get {
                         getAllGames()
-                    }.then{result ->
+                    }.then { result ->
                         response.headers.set('Access-Control-Allow-Origin', '*')
                         render result
                     }
                 }
 
                 put {
-                    parse(listOf(Game.class)).onError{
+                    parse(listOf(Game.class)).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
@@ -84,7 +85,7 @@ class Games extends GroovyChainAction {
                             p.stream().map { q ->
                                 insertGame(q)
                             }.collect(Collectors.joining(System.lineSeparator(), result + System.lineSeparator(), ""))
-                        }.then{result ->
+                        }.then { result ->
                             response.headers.set('Access-Control-Allow-Origin', '*')
                             render result
                         }
@@ -92,12 +93,12 @@ class Games extends GroovyChainAction {
                 }
 
                 post {
-                    parse(PostGameRequest.class).onError{
+                    parse(PostGameRequest.class).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
                             generateGames(p)
-                        }.then{result ->
+                        }.then { result ->
                             response.headers.set('Access-Control-Allow-Origin', '*')
                             render result
                         }
@@ -107,7 +108,7 @@ class Games extends GroovyChainAction {
                 delete {
                     Blocking.get {
                         cleanGameTable()
-                    }.then{result ->
+                    }.then { result ->
                         response.headers.set('Access-Control-Allow-Origin', '*')
                         render result
                     }
@@ -121,13 +122,38 @@ class Games extends GroovyChainAction {
 
         if (game.generationMethod == PostGameRequest.GenerationMethod.GIVEN) {
             result.append("generationMethod: ").append(game.generationMethod).append(".").append(System.lineSeparator())
-            game.games.stream().map{g ->insertGame(g)}.forEach{r -> result.append(r).append(System.lineSeparator())}
+            game.games.stream().map { g -> insertGame(g) }.forEach { r -> result.append(r).append(System.lineSeparator()) }
         } else if (game.generationMethod == PostGameRequest.GenerationMethod.LASTFIRST) {
             result.append("generationMethod: ").append(game.generationMethod).append(".")
 
+            if (game.getPlayers() != null) {
+                //Need last played statistics first
+            }
         } else if (game.generationMethod == PostGameRequest.GenerationMethod.RANDOM) {
-            result.append("generationMethod: ").append(game.generationMethod).append(".")
+            result.append("generationMethod: ").append(game.generationMethod).append(".").append(System.lineSeparator())
 
+            if (game.getPlayers() != null) {
+                Queue<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().parallelStream().map { player -> player.getName() }.collect())
+                Collections.shuffle(randomPlayerNames, new Random())
+
+                while (randomPlayerNames.size() > 0) {
+                    String player_red_1 = randomPlayerNames.poll();
+                    String player_blue_1 = randomPlayerNames.poll();
+                    String player_red_2 = randomPlayerNames.poll();
+                    String player_blue_2 = randomPlayerNames.poll();
+                    Game newGame = new Game(
+                            null,
+                            player_red_1,
+                            player_red_2,
+                            player_blue_1,
+                            player_blue_2,
+                            new Timestamp(System.currentTimeMillis()).toString(),
+                            "",
+                            "-1",
+                            "-1");
+                    result.append(insertGame(newGame)).append(System.lineSeparator())
+                }
+            }
         } else {
             result.append("generationMethod: ").append(game.generationMethod).append(" not known.")
         }
