@@ -7,6 +7,7 @@ ratpack {
         module MarkupTemplateModule
         add(new Players())
         add(new Games())
+        add(new StatisticsPlayersLastPlayed())
     }
 
     handlers {
@@ -20,6 +21,10 @@ ratpack {
 
         prefix("games") {
             all chain(registry.get(Games))
+        }
+
+        prefix("statisticsPlayersLastPlayed") {
+            all chain(registry.get(StatisticsPlayersLastPlayed))
         }
 
         prefix("api") {

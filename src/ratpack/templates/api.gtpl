@@ -84,6 +84,13 @@ html {
       p '{"generationMethod":"RANDOM","players":[{"name":"dwp1"},{"name":"cani"},{"name":"frmi"},{"name":"frmi1"},{"name":"alsk"},{"name":"monn"},{"name":"asfasfaf"},{"name":"fgdgdfg"},{"name":"fgdgdfg1"}]}'
      }
 
+     section {
+     h2 'StatisticsPlayersLastPlayed'
+     h4 'http://localhost:5050/statisticsPlayersLastPlayed'
+     p 'Only implemented GET'
+     p 'Returns all players represented in games and when they last played.'
+     }
+
     footer {}
   }
 }
