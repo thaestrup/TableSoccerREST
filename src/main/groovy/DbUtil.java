@@ -15,9 +15,11 @@ public class DbUtil {
 
     public static String execute(String query) {
         Sql sql = null;
+        String resultID = "ERROR";
         try {
             sql = Sql.newInstance(url, user, password, driver);
             sql.execute(query);
+            resultID = "OK, ID: " + sql.rows("SELECT LAST_INSERT_ID();").get(0).get("LAST_INSERT_ID()").toString();
             sql.close();
         } catch (ClassNotFoundException e) {
             return e.toString();
@@ -28,9 +30,28 @@ public class DbUtil {
                 sql.close();
             }
         }
-        
-        return "OK";
+
+        return resultID;
     }
+
+//    public static String preparedStatement(String query, String[] keys) {
+//        Sql sql = null;
+//        try {
+//            sql = Sql.newInstance(url, user, password, driver);
+//            sql.execute(query);
+//            sql.close();
+//        } catch (ClassNotFoundException e) {
+//            return e.toString();
+//        } catch (SQLException e) {
+//            return e.toString();
+//        } finally {
+//            if (sql != null) {
+//                sql.close();
+//            }
+//        }
+//
+//        return "OK";
+//    }
 
     public static List<GroovyRowResult> query(String query) throws SQLException, ClassNotFoundException {
         Sql sql = Sql.newInstance(url, user, password, driver);
