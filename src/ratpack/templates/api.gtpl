@@ -86,9 +86,12 @@ html {
 
      section {
      h2 'StatisticsPlayersLastPlayed'
-     h4 'http://localhost:5050/statisticsPlayersLastPlayed'
      p 'Only implemented GET'
-     p 'Returns all players represented in games and when they last played.'
+     p 'Returns all players represented in games and when they last played, not sorted.'
+     h3 'GET'
+     h4 'http://localhost:5050/statisticsPlayersLastPlayed'
+     p 'Returns'
+     p '{"fgdgdfg":1480278653000,"monn":1480278653000,"dwp111":1480278653000,"null":1480262909000,"cani":1480277999000,"frmi":1480277999000,"fgdgdfg1":1480278653000,"dwp1":1480277976000,"frmi1":1480278653000,"asfasfaf":1480278653000,"alsk":1480278653000}'
      }
 
     footer {}

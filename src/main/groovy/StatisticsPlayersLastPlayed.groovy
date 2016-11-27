@@ -24,12 +24,7 @@ class StatisticsPlayersLastPlayed extends GroovyChainAction {
                 }
 
                 get {
-//                    def url = 'http://api.icndb.com/jokes/random'
-//                    def json = new JsonSlurper().parseText(url.toURL().text)
-//                    def joke = json?.value?.joke
-//                    println joke
-
-                    def url = 'http://localhost:5050/games'
+                    def url = 'http://localhost:5050/games' //TODO replace with configs un the future
                     def response = new JsonSlurper().parseText(url.toURL().text)
                     Map<String, Timestamp> players = new HashMap<>()
                     response.each {game ->
