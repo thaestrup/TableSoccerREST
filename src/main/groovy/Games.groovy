@@ -1,5 +1,6 @@
 import Model.Game
-import Model.PostGameRequest
+import Model.GamesPostRequest
+import Model.GamesPostResponse
 import groovy.sql.GroovyRowResult
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
@@ -93,14 +94,14 @@ class Games extends GroovyChainAction {
                 }
 
                 post {
-                    parse(PostGameRequest.class).onError {
+                    parse(GamesPostRequest.class).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
                             generateGames(p)
                         }.then { result ->
                             response.headers.set('Access-Control-Allow-Origin', '*')
-                            render result
+                            render json(result)
                         }
                     }
                 }
@@ -117,20 +118,20 @@ class Games extends GroovyChainAction {
         }
     }
 
-    private String generateGames(PostGameRequest game) {
-        StringBuffer result = new StringBuffer();
+    private GamesPostResponse generateGames(GamesPostRequest game) {
+        GamesPostResponse result = new GamesPostResponse();
 
-        if (game.generationMethod == PostGameRequest.GenerationMethod.GIVEN) {
-            result.append("generationMethod: ").append(game.generationMethod).append(".").append(System.lineSeparator())
-            game.games.stream().map { g -> insertGame(g) }.forEach { r -> result.append(r).append(System.lineSeparator()) }
-        } else if (game.generationMethod == PostGameRequest.GenerationMethod.LASTFIRST) {
-            result.append("generationMethod: ").append(game.generationMethod).append(".")
+        if (game.generationMethod == GamesPostRequest.GenerationMethod.GIVEN) {
+            result.setGenerationMethod(game.generationMethod.toString())
+            game.games.stream().map { g -> insertGame(g) }.forEach{r -> result.add(r) }
+        } else if (game.generationMethod == GamesPostRequest.GenerationMethod.LASTFIRST) {
+            result.setGenerationMethod(game.generationMethod.toString())
 
             if (game.getPlayers() != null) {
                 //Need last played statistics first
             }
-        } else if (game.generationMethod == PostGameRequest.GenerationMethod.RANDOM) {
-            result.append("generationMethod: ").append(game.generationMethod).append(".").append(System.lineSeparator())
+        } else if (game.generationMethod == GamesPostRequest.GenerationMethod.RANDOM) {
+            result.setGenerationMethod(game.generationMethod.toString())
 
             if (game.getPlayers() != null) {
                 Queue<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().parallelStream().map { player -> player.getName() }.collect())
@@ -151,11 +152,11 @@ class Games extends GroovyChainAction {
                             "",
                             "-1",
                             "-1");
-                    result.append(insertGame(newGame)).append(System.lineSeparator())
+                    result.add(insertGame(newGame))
                 }
             }
         } else {
-            result.append("generationMethod: ").append(game.generationMethod).append(" not known.")
+            result.setGenerationMethod(game.generationMethod.toString())
         }
 
         return result;
@@ -183,7 +184,7 @@ class Games extends GroovyChainAction {
     }
 
     private String insertGame(Game game) {
-        "insertGame result: " + DbUtil.execute("INSERT INTO tbl_fights (player_red_1, player_red_2, player_blue_1, player_blue_2, timestamp, match_winner, points_at_steake, winning_table) VALUES ('" + game.getPlayer_red_1() + "', '" + game.getPlayer_red_2() + "', '" + game.getPlayer_blue_1() + "', '" + game.getPlayer_blue_2() + "', '" + game.getLastUpdated() + "', '" + game.getMatch_winner() + "', '" + game.getPoints_at_stake() + "', '" + game.getWinning_table() + "')")
+        DbUtil.execute("INSERT INTO tbl_fights (player_red_1, player_red_2, player_blue_1, player_blue_2, timestamp, match_winner, points_at_steake, winning_table) VALUES ('" + game.getPlayer_red_1() + "', '" + game.getPlayer_red_2() + "', '" + game.getPlayer_blue_1() + "', '" + game.getPlayer_blue_2() + "', '" + game.getLastUpdated() + "', '" + game.getMatch_winner() + "', '" + game.getPoints_at_stake() + "', '" + game.getWinning_table() + "')")
     }
 
 }

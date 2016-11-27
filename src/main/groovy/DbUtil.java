@@ -19,7 +19,7 @@ public class DbUtil {
         try {
             sql = Sql.newInstance(url, user, password, driver);
             sql.execute(query);
-            resultID = "OK, ID: " + sql.rows("SELECT LAST_INSERT_ID();").get(0).get("LAST_INSERT_ID()").toString();
+            resultID = sql.rows("SELECT LAST_INSERT_ID();").get(0).get("LAST_INSERT_ID()").toString();
             sql.close();
         } catch (ClassNotFoundException e) {
             return e.toString();
