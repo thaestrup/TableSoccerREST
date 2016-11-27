@@ -137,6 +137,7 @@ class Games extends GroovyChainAction {
                 Queue<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().parallelStream().map { player -> player.getName() }.collect())
                 Collections.shuffle(randomPlayerNames, new Random())
 
+                int count = 0;
                 while (randomPlayerNames.size() > 0) {
                     String player_red_1 = randomPlayerNames.poll();
                     String player_blue_1 = randomPlayerNames.poll();
@@ -153,6 +154,10 @@ class Games extends GroovyChainAction {
                             "-1",
                             "-1");
                     result.add(insertGame(newGame))
+                    count++;
+                    if(count >= game.getNumberOfGames()) {
+                        break;
+                    }
                 }
             }
         } else {
