@@ -8,6 +8,7 @@ ratpack {
         add(new Players())
         add(new Games())
         add(new StatisticsPlayersLastPlayed())
+        add(new RandomTournament())
     }
 
     handlers {
@@ -25,6 +26,12 @@ ratpack {
 
         prefix("statisticsPlayersLastPlayed") {
             all chain(registry.get(StatisticsPlayersLastPlayed))
+        }
+
+        prefix("tournament") {
+            prefix("randomTournament") {
+                all chain(registry.get(RandomTournament))
+            }
         }
 
         prefix("api") {

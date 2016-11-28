@@ -94,14 +94,16 @@ class Games extends GroovyChainAction {
                 }
 
                 post {
-                    parse(GamesPostRequest.class).onError {
+                    parse(listOf(Game.class)).onError {
                         e -> render e.toString()
                     }.then { p ->
                         Blocking.get {
-                            generateGames(p)
-                        }.then { result ->
+                            GamesPostResponse newGameIds = new GamesPostResponse()
+                            p.stream().map { g -> insertGame(g) }.forEach{r -> newGameIds.add(r)}
+                            newGameIds
+                        }.then { newGameIds ->
                             response.headers.set('Access-Control-Allow-Origin', '*')
-                            render json(result)
+                            render json(newGameIds)
                         }
                     }
                 }
@@ -116,55 +118,6 @@ class Games extends GroovyChainAction {
                 }
             }
         }
-    }
-
-    private GamesPostResponse generateGames(GamesPostRequest game) {
-        GamesPostResponse result = new GamesPostResponse();
-
-        if (game.generationMethod == GamesPostRequest.GenerationMethod.GIVEN) {
-            result.setGenerationMethod(game.generationMethod.toString())
-            game.games.stream().map { g -> insertGame(g) }.forEach{r -> result.add(r) }
-        } else if (game.generationMethod == GamesPostRequest.GenerationMethod.LASTFIRST) {
-            result.setGenerationMethod(game.generationMethod.toString())
-
-            if (game.getPlayers() != null) {
-                //Need last played statistics first
-            }
-        } else if (game.generationMethod == GamesPostRequest.GenerationMethod.RANDOM) {
-            result.setGenerationMethod(game.generationMethod.toString())
-
-            if (game.getPlayers() != null) {
-                Queue<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().parallelStream().map { player -> player.getName() }.collect())
-                Collections.shuffle(randomPlayerNames, new Random())
-
-                int count = 0;
-                while (randomPlayerNames.size() > 0) {
-                    String player_red_1 = randomPlayerNames.poll();
-                    String player_blue_1 = randomPlayerNames.poll();
-                    String player_red_2 = randomPlayerNames.poll();
-                    String player_blue_2 = randomPlayerNames.poll();
-                    Game newGame = new Game(
-                            null,
-                            player_red_1,
-                            player_red_2,
-                            player_blue_1,
-                            player_blue_2,
-                            new Timestamp(System.currentTimeMillis()).toString(),
-                            "",
-                            "-1",
-                            "-1");
-                    result.add(insertGame(newGame))
-                    count++;
-                    if(count >= game.getNumberOfGames()) {
-                        break;
-                    }
-                }
-            }
-        } else {
-            result.setGenerationMethod(game.generationMethod.toString())
-        }
-
-        return result;
     }
 
     private GroovyRowResult getGame(String id) {
