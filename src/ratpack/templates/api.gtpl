@@ -72,17 +72,12 @@ html {
 
       h3 'POST'
       h4 'http://localhost:5050/games/'
-      p '(Mandatory) generationMethod = {RANDOM, LASTFIRST, GIVEN}'
-      p '(Mandatory in all other cases but GIVEN) numberOfGames = Integer'
-      p '(Only used if "GIVEN" is chosen in generationMethod) games = See example below'
-      p '(Voluntary, if generationMethod GIVEN: If empty then use players from players resource that is "Ready") players = Se example below'
-      p 'Example result'
-      p '{"generationMethod":"RANDOM","newGameIDs":["19","20","21"]}'
-      p 'Example GIVEN:'
-      p '{"generationMethod":"GIVEN","games":[{"player_red_1":"MOKL","player_red_2":"fadfsa","player_blue_1":"asdasd","player_blue_2":"cjo","lastUpdated":"2016-10-22 21:21:30.0","match_winner":"red","points_at_stake":1,"winning_table":1},{"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:36.0","match_winner":"red","points_at_stake":1,"winning_table":1},{"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"red","points_at_stake":1,"winning_table":1},{"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"blue","points_at_stake":1,"winning_table":1}]}'
-      p 'Example RANDOM:'
-      p '{"generationMethod":"RANDOM","players":[{"name":"dwp1"},{"name":"cani"},{"name":"frmi"},{"name":"frmi1"},{"name":"alsk"},{"name":"monn"},{"name":"asfasfaf"},{"name":"fgdgdfg"},{"name":"fgdgdfg1"}]}'
-     }
+      p 'Adds the given games'
+      p 'Example input'
+      p '[{"player_red_1":"MOKL","player_red_2":"fadfsa","player_blue_1":"asdasd","player_blue_2":"cjo","lastUpdated":"2016-10-22 21:21:30.0","match_winner":"red","points_at_stake":1,"winning_table":1},{"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:36.0","match_winner":"red","points_at_stake":1,"winning_table":1},{"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"red","points_at_stake":1,"winning_table":1},{"player_red_1":"peeh","player_red_2":"jmn","player_blue_1":"KRBA","player_blue_2":"Q1RS","lastUpdated":"2016-10-22 21:21:37.0","match_winner":"blue","points_at_stake":1,"winning_table":1}]'
+      p 'Example output'
+      p '{"newGameIDs":["17","18","19","20"]}'
+      }
 
      section {
      h2 'StatisticsPlayersLastPlayed'
@@ -92,6 +87,19 @@ html {
      h4 'http://localhost:5050/statisticsPlayersLastPlayed'
      p 'Returns'
      p '{"fgdgdfg":1480278653000,"monn":1480278653000,"dwp111":1480278653000,"null":1480262909000,"cani":1480277999000,"frmi":1480277999000,"fgdgdfg1":1480278653000,"dwp1":1480277976000,"frmi1":1480278653000,"asfasfaf":1480278653000,"alsk":1480278653000}'
+     }
+
+
+    section {
+      h2 'RandomTournament'
+      p 'Only implemented POST'
+      h3 'POST'
+      p 'http://localhost:5050/tournament/randomTournament'
+      p 'Generates numberOfGames between the players: Add nulls when there are no players left to take the seats in the game'
+      p 'Example input'
+      p '{"numberOfGames":2,"players":[{"name":"dwp111"},{"name":"cani111"},{"name":"frmi1"},{"name":"frmi1"},{"name":"alsk"},{"name":"monn"},{"name":"asfasfaf"},{"name":"fgdgdfg"},{"name":"fgdgdfg1"}]}'
+      p 'Example output'
+      p '[{"id":-1,"player_red_1":"dwp111","player_red_2":"frmi1","player_blue_1":"monn","player_blue_2":"alsk","lastUpdated":"2016-11-28 19:18:07.846","match_winner":"","points_at_stake":-1,"winning_table":-1},{"id":-1,"player_red_1":"fgdgdfg1","player_red_2":"asfasfaf","player_blue_1":"cani111","player_blue_2":"frmi1","lastUpdated":"2016-11-28 19:18:07.868","match_winner":"","points_at_stake":-1,"winning_table":-1}]'
      }
 
     footer {}
