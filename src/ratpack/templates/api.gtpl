@@ -123,6 +123,7 @@ html {
      p 'Only implemented GET'
      p 'Returns all players represented in games and score, number of games, name and ranking relative to all other players'
      p 'Sorted on ranking'
+     p 'Winner gets one point pr. win.'
      h3 'GET'
      h4 'http://localhost:5050/pointsPrPlayer'
      p 'Returns'
