@@ -1,4 +1,4 @@
-import Model.LastFirstTournament
+import LastFirstTournament
 import ratpack.groovy.template.MarkupTemplateModule
 import static ratpack.groovy.Groovy.groovyMarkupTemplate
 import static ratpack.groovy.Groovy.ratpack
@@ -11,6 +11,7 @@ ratpack {
         add(new StatisticsPlayersLastPlayed())
         add(new RandomTournament())
         add(new LastFirstTournament())
+        add(new PointsPrPlayer())
     }
 
     handlers {
@@ -38,6 +39,10 @@ ratpack {
             prefix("lastFirstTournament") {
                 all chain(registry.get(LastFirstTournament))
             }
+        }
+
+        prefix("pointsPrPlayer") {
+            all chain(registry.get(PointsPrPlayer))
         }
 
         prefix("api") {

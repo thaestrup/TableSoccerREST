@@ -1,5 +1,5 @@
-package Model
-
+import Model.Game
+import Model.GamesPostRequest
 import groovy.json.JsonSlurper
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
