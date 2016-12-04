@@ -55,17 +55,18 @@ class PointsPrPlayer extends GroovyChainAction {
                             scores.putIfAbsent(game.getAt("player_red_1"), 1)
                             scores.putIfAbsent(game.getAt("player_red_2"), 1)
                         }
-
                     }
 
-//                    HashMultimap<Integer, String> playersPrValue =
-//                            Multimaps.invertFrom(Multimaps.forMap(scores),
-//                                    HashMultimap.<Integer, String> create());
-
+                    //For calculating potitions in the ranking.
+                    HashMultimap<Integer, String> playersPrValue =
+                            Multimaps.invertFrom(Multimaps.forMap(scores),
+                                    HashMultimap.<Integer, String> create());
+                    ArrayList<Integer> ranking = new ArrayList<>(playersPrValue.keySet())
+                    ranking.sort()
 
                     List<PointsPrPlayerPlayer> result = new LinkedList<>()
                     scores.keySet().each { playerName ->
-                        result.add(new PointsPrPlayerPlayer(1, scores.get(playerName), numberOfGames.get(playerName), playerName))
+                        result.add(new PointsPrPlayerPlayer(ranking.indexOf(scores.get(playerName)), scores.get(playerName), numberOfGames.get(playerName), playerName))
                     }
 
                     render json(result)
