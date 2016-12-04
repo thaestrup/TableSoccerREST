@@ -32,11 +32,7 @@ class PointsPrPlayer extends GroovyChainAction {
 
                     Map<String, Integer> scores = new HashMap<>()
                     Map<String, Integer> numberOfGames = new HashMap<>()
-                    response.each {game ->
-                        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                        Date d = formatter.parse(game.getAt("lastUpdated"));
-                        Timestamp ts = new Timestamp(d.getTime());
-
+                    response.each { game ->
                         def addOne = { String name, Integer score -> score + 1 }
                         numberOfGames.computeIfPresent(game.getAt("player_blue_1"), addOne)
                         numberOfGames.computeIfPresent(game.getAt("player_blue_2"), addOne)
@@ -48,10 +44,18 @@ class PointsPrPlayer extends GroovyChainAction {
                         numberOfGames.putIfAbsent(game.getAt("player_red_1"), 1)
                         numberOfGames.putIfAbsent(game.getAt("player_red_2"), 1)
 
-                        scores.putIfAbsent(game.getAt("player_blue_1"), 1)
-                        scores.putIfAbsent(game.getAt("player_blue_2"), 2)
-                        scores.putIfAbsent(game.getAt("player_red_1"), 3)
-                        scores.putIfAbsent(game.getAt("player_red_2"), 4)
+                        if (game.getAt("match_winner").equals("blue")) {
+                            scores.computeIfPresent(game.getAt("player_blue_1"), addOne)
+                            scores.computeIfPresent(game.getAt("player_blue_2"), addOne)
+                            scores.putIfAbsent(game.getAt("player_blue_1"), 1)
+                            scores.putIfAbsent(game.getAt("player_blue_2"), 1)
+                        } else if (game.getAt("match_winner").equals("red")) {
+                            scores.computeIfPresent(game.getAt("player_red_1"), addOne)
+                            scores.computeIfPresent(game.getAt("player_red_2"), addOne)
+                            scores.putIfAbsent(game.getAt("player_red_1"), 1)
+                            scores.putIfAbsent(game.getAt("player_red_2"), 1)
+                        }
+
                     }
 
 //                    HashMultimap<Integer, String> playersPrValue =
@@ -60,7 +64,7 @@ class PointsPrPlayer extends GroovyChainAction {
 
 
                     List<PointsPrPlayerPlayer> result = new LinkedList<>()
-                    scores.keySet().each {playerName ->
+                    scores.keySet().each { playerName ->
                         result.add(new PointsPrPlayerPlayer(1, scores.get(playerName), numberOfGames.get(playerName), playerName))
                     }
 
