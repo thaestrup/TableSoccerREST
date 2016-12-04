@@ -120,7 +120,7 @@ html {
 
      section {
      h2 'PointsPrPlayer'
-     p 'Only implemented GET'
+     p 'Only implemented GET and POST'
      p 'Returns all players represented in games and score, number of games, name and ranking relative to all other players'
      p 'Sorted on ranking'
      p 'Winner gets one point pr. win.'
@@ -128,6 +128,13 @@ html {
      h4 'http://localhost:5050/pointsPrPlayer'
      p 'Returns'
      p '[{"position":0,"points":10,"numberOfGames":15,"name":"jmn"},{"position":0,"points":10,"numberOfGames":15,"name":"peeh"},{"position":1,"points":5,"numberOfGames":15,"name":"Q1RS"},{"position":1,"points":5,"numberOfGames":15,"name":"KRBA"},{"position":1,"points":5,"numberOfGames":5,"name":"MOKL"},{"position":1,"points":5,"numberOfGames":5,"name":"fadfsa"}]'
+
+     h3 'POST'
+     h4 'http://localhost:5050/pointsPrPlayer'
+     p 'Example input'
+     p '{"winnerPoints":3,"loserPoints":-1,"evenPoints":1}'
+     p 'Returns'
+     p '[{"position":0,"points":30,"numberOfGames":15,"name":"jmn"},{"position":0,"points":30,"numberOfGames":15,"name":"peeh"},{"position":1,"points":15,"numberOfGames":5,"name":"MOKL"},{"position":1,"points":15,"numberOfGames":5,"name":"fadfsa"},{"position":2,"points":5,"numberOfGames":15,"name":"Q1RS"},{"position":2,"points":5,"numberOfGames":15,"name":"KRBA"},{"position":3,"points":-5,"numberOfGames":5,"name":"asdasd"},{"position":3,"points":-5,"numberOfGames":5,"name":"cjo"}]'
      }
 
     footer {}
