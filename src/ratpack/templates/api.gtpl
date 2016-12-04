@@ -2,7 +2,7 @@ yieldUnescaped '<!DOCTYPE html>'
 html {
   head {
     meta(charset:'utf-8')
-    title("Ratpack: $title")
+    title("API")
 
     meta(name: 'apple-mobile-web-app-title', content: 'Ratpack')
     meta(name: 'description', content: '')
@@ -96,6 +96,22 @@ html {
       h3 'POST'
       p 'http://localhost:5050/tournament/randomTournament'
       p 'Generates numberOfGames between the players: Add nulls when there are no players left to take the seats in the game'
+      p 'Will never duplicate any player in the games created, will stop if there are no players left and will fill out last games with nulls'
+      p 'Example input'
+      p '{"numberOfGames":2,"players":[{"name":"dwp111"},{"name":"cani111"},{"name":"frmi1"},{"name":"frmi1"},{"name":"alsk"},{"name":"monn"},{"name":"asfasfaf"},{"name":"fgdgdfg"},{"name":"fgdgdfg1"}]}'
+      p 'Example output'
+      p '[{"id":-1,"player_red_1":"dwp111","player_red_2":"frmi1","player_blue_1":"monn","player_blue_2":"alsk","lastUpdated":"2016-11-28 19:18:07.846","match_winner":"","points_at_stake":-1,"winning_table":-1},{"id":-1,"player_red_1":"fgdgdfg1","player_red_2":"asfasfaf","player_blue_1":"cani111","player_blue_2":"frmi1","lastUpdated":"2016-11-28 19:18:07.868","match_winner":"","points_at_stake":-1,"winning_table":-1}]'
+     }
+
+
+    section {
+      h2 'LastFirstTournament'
+      p 'Only implemented POST'
+      h3 'POST'
+      p 'http://localhost:5050/tournament/lastFirstTournament'
+      p 'Generates numberOfGames between the players: Add nulls when there are no players left to take the seats in the game'
+      p 'Players that never played goes first, then in sorted order where the players that played farthest into the past goes first. '
+      p 'Will never duplicate any player in the games created, will stop if there are no players left and will fill out last games with nulls'
       p 'Example input'
       p '{"numberOfGames":2,"players":[{"name":"dwp111"},{"name":"cani111"},{"name":"frmi1"},{"name":"frmi1"},{"name":"alsk"},{"name":"monn"},{"name":"asfasfaf"},{"name":"fgdgdfg"},{"name":"fgdgdfg1"}]}'
       p 'Example output'
