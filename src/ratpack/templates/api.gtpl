@@ -118,6 +118,17 @@ html {
       p '[{"id":-1,"player_red_1":"dwp111","player_red_2":"frmi1","player_blue_1":"monn","player_blue_2":"alsk","lastUpdated":"2016-11-28 19:18:07.846","match_winner":"","points_at_stake":-1,"winning_table":-1},{"id":-1,"player_red_1":"fgdgdfg1","player_red_2":"asfasfaf","player_blue_1":"cani111","player_blue_2":"frmi1","lastUpdated":"2016-11-28 19:18:07.868","match_winner":"","points_at_stake":-1,"winning_table":-1}]'
      }
 
+     section {
+     h2 'PointsPrPlayer'
+     p 'Only implemented GET'
+     p 'Returns all players represented in games and score, number of games, name and ranking relative to all other players'
+     p 'Sorted on ranking'
+     h3 'GET'
+     h4 'http://localhost:5050/pointsPrPlayer'
+     p 'Returns'
+     p '[{"position":0,"points":10,"numberOfGames":15,"name":"jmn"},{"position":0,"points":10,"numberOfGames":15,"name":"peeh"},{"position":1,"points":5,"numberOfGames":15,"name":"Q1RS"},{"position":1,"points":5,"numberOfGames":15,"name":"KRBA"},{"position":1,"points":5,"numberOfGames":5,"name":"MOKL"},{"position":1,"points":5,"numberOfGames":5,"name":"fadfsa"}]'
+     }
+
     footer {}
   }
 }

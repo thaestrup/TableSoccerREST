@@ -4,10 +4,6 @@ import com.google.common.collect.Multimaps
 import groovy.json.JsonSlurper
 import ratpack.groovy.handling.GroovyChainAction
 
-import java.sql.Timestamp
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-
 import static ratpack.jackson.Jackson.json
 
 /**
