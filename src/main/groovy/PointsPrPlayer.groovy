@@ -62,12 +62,15 @@ class PointsPrPlayer extends GroovyChainAction {
                             Multimaps.invertFrom(Multimaps.forMap(scores),
                                     HashMultimap.<Integer, String> create());
                     ArrayList<Integer> ranking = new ArrayList<>(playersPrValue.keySet())
-                    ranking.sort()
+                    ranking.sort{points -> -points}
 
                     List<PointsPrPlayerPlayer> result = new LinkedList<>()
                     scores.keySet().each { playerName ->
                         result.add(new PointsPrPlayerPlayer(ranking.indexOf(scores.get(playerName)), scores.get(playerName), numberOfGames.get(playerName), playerName))
                     }
+
+                    //Biggest potition first
+                    result.sort{player -> player.getPosition()}
 
                     render json(result)
                 }
