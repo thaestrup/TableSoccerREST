@@ -5,6 +5,8 @@ import com.google.common.collect.Multimaps
 import groovy.json.JsonSlurper
 import ratpack.groovy.handling.GroovyChainAction
 
+import java.util.stream.IntStream
+
 import static ratpack.jackson.Jackson.json
 
 /**
@@ -32,8 +34,6 @@ class PointsPrPlayer extends GroovyChainAction {
                 post {
                     def url = 'http://localhost:5050/games' //TODO replace with configs un the future
                     def response = new JsonSlurper().parseText(url.toURL().text)
-                    PointsPrPlayerRequest r = null;
-
                     parse(PointsPrPlayerRequest.class).onError { e ->
                         render e
                     }.then{ result ->
@@ -96,7 +96,8 @@ class PointsPrPlayer extends GroovyChainAction {
 
         List<PointsPrPlayerPlayer> result = new LinkedList<>()
         scores.keySet().each { playerName ->
-            result.add(new PointsPrPlayerPlayer(ranking.indexOf(scores.get(playerName)), scores.get(playerName), numberOfGames.get(playerName), playerName))
+            int position = IntStream.range(0, ranking.indexOf(scores.get(playerName))).map{i -> playersPrValue.get(ranking.get(i)).size()}.sum() + 1
+            result.add(new PointsPrPlayerPlayer(position, scores.get(playerName), numberOfGames.get(playerName), playerName))
         }
 
         //Biggest potition first
