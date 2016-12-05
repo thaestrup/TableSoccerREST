@@ -132,7 +132,7 @@ html {
      h3 'POST'
      h4 'http://localhost:5050/pointsPrPlayer'
      p 'Example input'
-     p '{"winnerPoints":3,"loserPoints":-1,"evenPoints":1}'
+     p '{"winnerPoints":3,"loserPoints":-1,"drawPoints":1}'
      p 'Returns'
      p '[{"position":0,"points":30,"numberOfGames":15,"name":"jmn"},{"position":0,"points":30,"numberOfGames":15,"name":"peeh"},{"position":1,"points":15,"numberOfGames":5,"name":"MOKL"},{"position":1,"points":15,"numberOfGames":5,"name":"fadfsa"},{"position":2,"points":5,"numberOfGames":15,"name":"Q1RS"},{"position":2,"points":5,"numberOfGames":15,"name":"KRBA"},{"position":3,"points":-5,"numberOfGames":5,"name":"asdasd"},{"position":3,"points":-5,"numberOfGames":5,"name":"cjo"}]'
      }

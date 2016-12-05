@@ -75,15 +75,15 @@ class PointsPrPlayer extends GroovyChainAction {
                 scores.putIfAbsent(game.getAt("player_red_2"), r.getWinnerPoints())
                 scores.putIfAbsent(game.getAt("player_blue_1"), r.getLoserPoints())
                 scores.putIfAbsent(game.getAt("player_blue_2"), r.getLoserPoints())
-            } else if (game.getAt("match_winner").equals("even")) {
-                scores.computeIfPresent(game.getAt("player_red_1"), { String name, Integer score -> score + r.getEvenPoints() })
-                scores.computeIfPresent(game.getAt("player_red_2"), { String name, Integer score -> score + r.getEvenPoints() })
-                scores.computeIfPresent(game.getAt("player_blue_1"), { String name, Integer score -> score + r.getEvenPoints() })
-                scores.computeIfPresent(game.getAt("player_blue_2"), { String name, Integer score -> score + r.getEvenPoints() })
-                scores.putIfAbsent(game.getAt("player_red_1"), r.getEvenPoints())
-                scores.putIfAbsent(game.getAt("player_red_2"), r.getEvenPoints())
-                scores.putIfAbsent(game.getAt("player_blue_1"), r.getEvenPoints())
-                scores.putIfAbsent(game.getAt("player_blue_2"), r.getEvenPoints())
+            } else if (game.getAt("match_winner").equals("draw")) {
+                scores.computeIfPresent(game.getAt("player_red_1"), { String name, Integer score -> score + r.getDrawPoints() })
+                scores.computeIfPresent(game.getAt("player_red_2"), { String name, Integer score -> score + r.getDrawPoints() })
+                scores.computeIfPresent(game.getAt("player_blue_1"), { String name, Integer score -> score + r.getDrawPoints() })
+                scores.computeIfPresent(game.getAt("player_blue_2"), { String name, Integer score -> score + r.getDrawPoints() })
+                scores.putIfAbsent(game.getAt("player_red_1"), r.getDrawPoints())
+                scores.putIfAbsent(game.getAt("player_red_2"), r.getDrawPoints())
+                scores.putIfAbsent(game.getAt("player_blue_1"), r.getDrawPoints())
+                scores.putIfAbsent(game.getAt("player_blue_2"), r.getDrawPoints())
             }
         }
 

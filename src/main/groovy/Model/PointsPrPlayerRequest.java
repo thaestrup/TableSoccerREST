@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PointsPrPlayerRequest {
     private int winnerPoints;
     private int loserPoints;
-    private int evenPoints;
+    private int drawPoints;
 
     public PointsPrPlayerRequest(@JsonProperty("winnerPoints")  int winnerPoints,
                                  @JsonProperty("loserPoints") int loserPoints,
-                                 @JsonProperty("evenPoints") int evenPoints) {
+                                 @JsonProperty("drawPoints") int evenPoints) {
         this.winnerPoints = winnerPoints;
         this.loserPoints = loserPoints;
-        this.evenPoints = evenPoints;
+        this.drawPoints = evenPoints;
     }
 
     public int getWinnerPoints() {
@@ -34,11 +34,11 @@ public class PointsPrPlayerRequest {
         this.loserPoints = loserPoints;
     }
 
-    public int getEvenPoints() {
-        return evenPoints;
+    public int getDrawPoints() {
+        return drawPoints;
     }
 
-    public void setEvenPoints(int evenPoints) {
-        this.evenPoints = evenPoints;
+    public void setDrawPoints(int drawPoints) {
+        this.drawPoints = drawPoints;
     }
 }
