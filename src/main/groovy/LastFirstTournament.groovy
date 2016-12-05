@@ -49,13 +49,17 @@ class LastFirstTournament extends GroovyChainAction {
             LinkedList<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().stream().map { player -> player.getName() }.collect())
 
             randomPlayerNames.sort{element -> playersLastPlayed.get(element)}
+            int maxPlayersNeeded = 4 * game.getNumberOfGames()
+            maxPlayersNeeded = maxPlayersNeeded < randomPlayerNames.size() ? maxPlayersNeeded : randomPlayerNames.size()
+            LinkedList<String> realList = randomPlayerNames.subList(0, maxPlayersNeeded)
+            Collections.shuffle(realList, new Random())
 
             int count = 0;
-            while (randomPlayerNames.size() > 0) {
-                String player_red_1 = randomPlayerNames.poll();
-                String player_blue_1 = randomPlayerNames.poll();
-                String player_red_2 = randomPlayerNames.poll();
-                String player_blue_2 = randomPlayerNames.poll();
+            while (realList.size() > 0) {
+                String player_red_1 = realList.poll();
+                String player_blue_1 = realList.poll();
+                String player_red_2 = realList.poll();
+                String player_blue_2 = realList.poll();
                 Game newGame = new Game(
                         null,
                         player_red_1,
