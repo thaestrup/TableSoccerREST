@@ -18,7 +18,7 @@ class PointsPrPlayer extends GroovyChainAction {
             byMethod {
 
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'POST, GET')
+                    response.headers.set('Access-Control-Allow-Methods:', 'POST, GET, OPTIONS')
                     response.headers.set('Access-Control-Allow-Origin', '*')
                     render "OK"
                 }

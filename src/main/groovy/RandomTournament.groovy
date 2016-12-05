@@ -22,7 +22,7 @@ class RandomTournament extends GroovyChainAction {
             byMethod {
 
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'POST')
+                    response.headers.set('Access-Control-Allow-Methods:', 'POST, OPTIONS')
                     response.headers.set('Access-Control-Allow-Origin', '*')
                     render "OK"
                 }

@@ -18,7 +18,7 @@ class StatisticsPlayersLastPlayed extends GroovyChainAction {
             byMethod {
 
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'GET')
+                    response.headers.set('Access-Control-Allow-Methods:', 'GET, OPTIONS')
                     response.headers.set('Access-Control-Allow-Origin', '*')
                     render "OK"
                 }
