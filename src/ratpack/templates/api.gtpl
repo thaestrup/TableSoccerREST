@@ -12,6 +12,8 @@ html {
   }
   body {
     header {
+      h1 'PLEASE NOTICE - THIS PAGE IS PRESENTLY NOT UP-TO-DATE!'
+      p '-----------------------------------------------'
       h1 'Rest API'
       p 'There exist Players, Games and Results'
 
