@@ -12,7 +12,7 @@ html {
   }
   body {
     header {
-      h1 'PLEASE NOTICE - THIS PAGE IS PRESENTLY NOT UP-TO-DATE!'
+      h1 'PLEASE NOTICE - THIS PAGE IS PRESENTLY NOT UP-TO-DATE! (And maybe it won't be until version 2?)'
       p '-----------------------------------------------'
       h1 'Rest API'
       p 'There exist Players, Games and Results'
