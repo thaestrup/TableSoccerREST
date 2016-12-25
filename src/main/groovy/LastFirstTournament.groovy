@@ -1,5 +1,6 @@
 import Model.Game
 import Model.GamesPostRequest
+import Model.TournamentGameRound
 import groovy.json.JsonSlurper
 import ratpack.exec.Blocking
 import ratpack.groovy.handling.GroovyChainAction
@@ -8,6 +9,10 @@ import java.sql.Timestamp
 
 import static ratpack.jackson.Jackson.json
 
+import groovy.util.logging.Slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Created by super on 04/10/2016.
  */
@@ -15,24 +20,34 @@ class LastFirstTournament extends GroovyChainAction {
 
     @Override
     void execute() {
+    	Logger logger = LoggerFactory.getLogger(LastFirstTournament.class);
         all {
             byMethod {
 
                 options {
                     response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
                     response.headers.set('Access-Control-Allow-Origin', '*')
+                    response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
                     render "OK"
                 }
 
                 post {
                     parse(GamesPostRequest.class).onError {
                         e -> render e.toString()
+                    }.onError {
+                      logger.info("ERROR in parse")
                     }.then { p ->
                         Blocking.get {
                             generateGames(p)
+                        }.onError {
+                          logger.info("ERROR in Blocking.get")
                         }.then { result ->
+                            response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
                             response.headers.set('Access-Control-Allow-Origin', '*')
+                            response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
+
                             render json(result)
+
                         }
                     }
                 }
@@ -40,26 +55,31 @@ class LastFirstTournament extends GroovyChainAction {
         }
     }
 
-    private List<Game> generateGames(GamesPostRequest game) {
+
+
+    private List<List<Game>> generateGames(GamesPostRequest game) {
+    	Logger logger = LoggerFactory.getLogger(LastFirstTournament.class);
         List<Game> result = new LinkedList<>();
-
+        Random random;
         if (game.getPlayers() != null) {
-            def url = 'http://localhost:5050/statisticsPlayersLastPlayed' //TODO replace with configs in the future
-            Map<String, Long> playersLastPlayed = new HashMap<>(new JsonSlurper().parseText(url.toURL().text))
-            LinkedList<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().stream().map { player -> player.getName() }.collect())
+            Map<String, Long> playersLastPlayed = MoreUtil.playersLastPlayed();
 
+            LinkedList<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().stream().map { player -> player.getName() }.collect())
+            randomPlayerNames.sort{element -> new Random() }
             randomPlayerNames.sort{element -> playersLastPlayed.get(element)}
             int maxPlayersNeeded = 4 * game.getNumberOfGames()
             maxPlayersNeeded = maxPlayersNeeded < randomPlayerNames.size() ? maxPlayersNeeded : randomPlayerNames.size()
             LinkedList<String> realList = randomPlayerNames.subList(0, maxPlayersNeeded)
             Collections.shuffle(realList, new Random())
-
             int count = 0;
+
             while (realList.size() > 0) {
+
                 String player_red_1 = realList.poll();
                 String player_blue_1 = realList.poll();
                 String player_red_2 = realList.poll();
                 String player_blue_2 = realList.poll();
+
                 Game newGame = new Game(
                         null,
                         player_red_1,
@@ -70,14 +90,24 @@ class LastFirstTournament extends GroovyChainAction {
                         "",
                         "-1",
                         "-1");
-                result.add(newGame)
+                // Don't return games, where there isn't at least 1 player on both teams
+                if (player_blue_1 != null) {
+                  result.add(newGame)
+                }
                 count++;
+
                 if (count >= game.getNumberOfGames()) {
+
                     break;
                 }
-            }
-        }
 
-        return result;
+            }
+
+        }
+        List<List<Game>> resultAsArray = new LinkedList<LinkedList<Game>>();
+        TournamentGameRound tournamentGameRound = new TournamentGameRound(result)
+        resultAsArray.add(tournamentGameRound)
+	
+        return resultAsArray;
     }
 }
