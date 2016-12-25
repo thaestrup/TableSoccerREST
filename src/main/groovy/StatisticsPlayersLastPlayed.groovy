@@ -7,6 +7,10 @@ import java.text.SimpleDateFormat
 
 import static ratpack.jackson.Jackson.json
 
+import groovy.util.logging.Slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Created by super on 04/10/2016.
  */
@@ -14,40 +18,23 @@ class StatisticsPlayersLastPlayed extends GroovyChainAction {
 
     @Override
     void execute() {
+    //Logger logger = LoggerFactory.getLogger(StatisticsPlayersLastPlayed.class);
+    //logger.info("In execute in StatisticsPlayerLastPlayed")
         all {
             byMethod {
 
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'GET, OPTIONS')
+                    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
                     response.headers.set('Access-Control-Allow-Origin', '*')
+                    response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
                     render "OK"
                 }
 
                 get {
-                    def url = 'http://localhost:5050/games' //TODO replace with configs un the future
-                    def response = new JsonSlurper().parseText(url.toURL().text)
-                    Map<String, Timestamp> players = new HashMap<>()
-                    response.each {game ->
-                        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                        Date d = formatter.parse(game.getAt("lastUpdated"));
-                        Timestamp ts = new Timestamp(d.getTime());
-
-                        def replaceIfBigger = { String name, Timestamp timestamp -> timestamp.after(ts) ? timestamp : ts }
-                        players.computeIfPresent(game.getAt("player_blue_1"), replaceIfBigger)
-                        players.computeIfPresent(game.getAt("player_blue_2"), replaceIfBigger)
-                        players.computeIfPresent(game.getAt("player_red_1"), replaceIfBigger)
-                        players.computeIfPresent(game.getAt("player_red_2"), replaceIfBigger)
-
-                        players.putIfAbsent(game.getAt("player_blue_1"), ts)
-                        players.putIfAbsent(game.getAt("player_blue_2"), ts)
-                        players.putIfAbsent(game.getAt("player_red_1"), ts)
-                        players.putIfAbsent(game.getAt("player_red_2"), ts)
-                    }
+                    Map<String, Long> players = MoreUtil.playersLastPlayed();
                     render json(players)
                 }
             }
         }
     }
-
-
 }
