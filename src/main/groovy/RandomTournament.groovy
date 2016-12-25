@@ -17,7 +17,7 @@ import static ratpack.jackson.Jackson.json
 
 /*
  *
- * PLEASE NOTICE: This class is not used in version 0.9.X and therefore not updated. 
+ * PLEASE NOTICE: This class is not used in version 0.9.X and therefore not updated.
  * It probably needs to use the new TournamentGameRound object and maybe other changes
  *
 */
@@ -31,7 +31,7 @@ class RandomTournament extends GroovyChainAction {
             byMethod {
 
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'POST, OPTIONS')
+                    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
                     response.headers.set('Access-Control-Allow-Origin', '*')
                     response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
                     render "OK"
