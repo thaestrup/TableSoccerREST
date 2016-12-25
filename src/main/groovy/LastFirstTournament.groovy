@@ -68,7 +68,17 @@ class LastFirstTournament extends GroovyChainAction {
             randomPlayerNames.sort{element -> new Random() }
             randomPlayerNames.sort{element -> playersLastPlayed.get(element)}
             int maxPlayersNeeded = 4 * game.getNumberOfGames()
-            maxPlayersNeeded = maxPlayersNeeded < randomPlayerNames.size() ? maxPlayersNeeded : randomPlayerNames.size()
+            if (randomPlayerNames.size() < 6) {
+              // If only players for 1 table
+              if (maxPlayersNeeded > 4) maxPlayersNeeded = 4;
+            } else if (randomPlayerNames.size() < 10) {
+              // If only players for 2 tables
+              if (maxPlayersNeeded > 8) maxPlayersNeeded = 8;
+            } else if (randomPlayerNames.size() < 14) {
+              // If only players for 3 tables
+              if (maxPlayersNeeded > 12) maxPlayersNeeded = 12;
+           }
+
             LinkedList<String> realList = randomPlayerNames.subList(0, maxPlayersNeeded)
             Collections.shuffle(realList, new Random())
             int count = 0;
@@ -107,7 +117,7 @@ class LastFirstTournament extends GroovyChainAction {
         List<List<Game>> resultAsArray = new LinkedList<LinkedList<Game>>();
         TournamentGameRound tournamentGameRound = new TournamentGameRound(result)
         resultAsArray.add(tournamentGameRound)
-	
+
         return resultAsArray;
     }
 }
