@@ -19,8 +19,9 @@ class Players extends GroovyChainAction {
         path(":name") {
             byMethod {
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'GET, OPTIONS, PUT, DELETE')
+                    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS, PUT, DELETE')
                     response.headers.set('Access-Control-Allow-Origin', '*')
+                    response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
                     render "OK"
                 }
 
@@ -61,8 +62,9 @@ class Players extends GroovyChainAction {
             byMethod {
 
                 options {
-                    response.headers.set('Access-Control-Allow-Methods:', 'POST, GET, OPTIONS, PUT, DELETE')
+                    response.headers.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE')
                     response.headers.set('Access-Control-Allow-Origin', '*')
+                    response.headers.set('Access-Control-Allow-Headers', 'x-requested-with, origin, content-type, accept')
                     render "OK"
                 }
 
