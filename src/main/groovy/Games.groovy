@@ -38,7 +38,7 @@ class Games extends GroovyChainAction {
                 // HACKING
                 get {
                     Blocking.get {
-		    	// HACK - Using id to test whether a known period was asked for (if not, it is a name that is asked for)
+		    	              // HACK - Using id to test whether a known period was asked for (if not, it is a name that is asked for)
                         String period = pathTokens["id"];
                         String hoursToGoBackInTime;
                         boolean nothingFound = false;
@@ -65,7 +65,7 @@ class Games extends GroovyChainAction {
                         // DAMN, this is the ugliest hack ever! (I almost get proud :-)
                         if (nothingFound) {
                           // Didn't find "alltime", "week", "day" or "hour", so we should return for a person instead
-			  String name = period
+			                    String name = period
                           getGamesForName(name)
 
                         } else {
