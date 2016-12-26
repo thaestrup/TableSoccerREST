@@ -58,6 +58,7 @@ class PointsPrPlayer extends GroovyChainAction {
                     }
                     List<Game> games = MoreUtil.getGamesForThisManyHoursBackInTime(hoursToGoBackInTime.toString());
 
+                    response.headers.set('Access-Control-Allow-Origin', '*')
                     render json(asdasd(new PointsPrPlayerRequest(2, 0, 1), games))
 
                 }
@@ -80,7 +81,7 @@ class PointsPrPlayer extends GroovyChainAction {
 
                     def url = 'http://localhost:5050/games' //TODO replace with configs un the future
                     List<Game> games = MoreUtil.getAllGames()
-		    
+		                response.headers.set('Access-Control-Allow-Origin', '*')
                     render json(asdasd(new PointsPrPlayerRequest(2, 0, 1), games))
 
                 }
@@ -98,6 +99,7 @@ class PointsPrPlayer extends GroovyChainAction {
                     }.onError {
                       	logger.info("ERROR")
                     }.then{ result ->
+                        response.headers.set('Access-Control-Allow-Origin', '*')
                         render json(asdasd(result, response))
                     }
 

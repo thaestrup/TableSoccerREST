@@ -32,6 +32,7 @@ class StatisticsPlayersLastPlayed extends GroovyChainAction {
 
                 get {
                     Map<String, Long> players = MoreUtil.playersLastPlayed();
+                    response.headers.set('Access-Control-Allow-Origin', '*')
                     render json(players)
                 }
             }
