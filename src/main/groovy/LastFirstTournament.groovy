@@ -68,13 +68,19 @@ class LastFirstTournament extends GroovyChainAction {
             randomPlayerNames.sort{element -> new Random() }
             randomPlayerNames.sort{element -> playersLastPlayed.get(element)}
             int maxPlayersNeeded = 4 * game.getNumberOfGames()
-            if (randomPlayerNames.size() < 6) {
+            if (randomPlayerNames.size() >= 0 && randomPlayerNames.size() <= 3) {
+              maxPlayersNeeded = randomPlayerNames.size();
+            } else if (randomPlayerNames.size() <= 5) {
               // If only players for 1 table
               if (maxPlayersNeeded > 4) maxPlayersNeeded = 4;
-            } else if (randomPlayerNames.size() < 10) {
+            } else if (randomPlayerNames.size() > 5 && randomPlayerNames.size() <= 7) {
+              maxPlayersNeeded = randomPlayerNames.size();
+            } else if (randomPlayerNames.size() <= 9) {
               // If only players for 2 tables
               if (maxPlayersNeeded > 8) maxPlayersNeeded = 8;
-            } else if (randomPlayerNames.size() < 14) {
+            } else if (randomPlayerNames.size() > 9 && randomPlayerNames.size() <= 11) {
+              maxPlayersNeeded = randomPlayerNames.size();
+            } else if (randomPlayerNames.size() <= 13) {
               // If only players for 3 tables
               if (maxPlayersNeeded > 12) maxPlayersNeeded = 12;
            }
