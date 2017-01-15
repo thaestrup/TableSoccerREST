@@ -1,3 +1,4 @@
+import Model.ConfigurationItem
 import Model.Player
 import Model.Game
 import groovy.sql.GroovyRowResult;
@@ -32,6 +33,14 @@ public class MoreUtil {
       }
     }
     return hashMap;
+  }
+
+  private static ensureConfigurationTableExist() {
+      DbUtil.execute("CREATE TABLE IF NOT EXISTS `tbl_configuration`(  `name` VARCHAR(255) NOT NULL UNIQUE,   `value` VARCHAR(255) NOT NULL  )")
+  }
+
+  private static List<ConfigurationItem> getAllConfigurationItems() {
+      DbUtil.query("SELECT * FROM tbl_configuration").collect { row -> new ConfigurationItem(row) }
   }
 
   private static List<Game> getAllGames() {

@@ -8,6 +8,7 @@ ratpack {
         module MarkupTemplateModule
         add(new Players())
         add(new Games())
+        add(new Configuration())
         add(new StatisticsPlayersLastPlayed())
         add(new RandomTournament())
         add(new LastFirstTournament())
@@ -31,7 +32,11 @@ ratpack {
             all chain(registry.get(StatisticsPlayersLastPlayed))
         }
 
-            prefix("tournament") {
+        prefix("configuration") {
+            all chain(registry.get(Configuration))
+        }
+
+        prefix("tournament") {
             prefix("randomTournament") {
                 all chain(registry.get(RandomTournament))
             }
