@@ -1,6 +1,7 @@
 import Model.ConfigurationItem
 import Model.Player
 import Model.Game
+import Model.TimerAction
 import groovy.sql.GroovyRowResult;
 import groovy.sql.Sql;
 
@@ -37,6 +38,15 @@ public class MoreUtil {
 
   private static ensureConfigurationTableExist() {
       DbUtil.execute("CREATE TABLE IF NOT EXISTS `tbl_configuration`(  `name` VARCHAR(255) NOT NULL UNIQUE,   `value` VARCHAR(255) NOT NULL  )")
+  }
+
+  private static ensureTimerTableExist() {
+      DbUtil.execute("CREATE TABLE IF NOT EXISTS `tbl_timer`(  `id` int(11) UNIQUE NOT NULL, `lastRequestedTimerStart` timestamp NOT NULL )")
+      DbUtil.execute("INSERT IGNORE INTO `tbl_timer` (id, lastRequestedTimerStart) values (1, NOW())");
+  }
+
+  private static List<TimerAction> getTimerActions() {
+      DbUtil.query("SELECT * FROM tbl_timer").collect { row -> new TimerAction(row) }
   }
 
   private static List<ConfigurationItem> getAllConfigurationItems() {

@@ -13,6 +13,7 @@ ratpack {
         add(new RandomTournament())
         add(new LastFirstTournament())
         add(new PointsPrPlayer())
+        add(new TimerActions())
     }
 
     handlers {
@@ -34,6 +35,10 @@ ratpack {
 
         prefix("configuration") {
             all chain(registry.get(Configuration))
+        }
+
+        prefix("timer") {
+            all chain(registry.get(TimerActions))
         }
 
         prefix("tournament") {
