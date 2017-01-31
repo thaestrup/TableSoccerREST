@@ -60,13 +60,19 @@ class LastFirstTournament extends GroovyChainAction {
     private List<List<Game>> generateGames(GamesPostRequest game) {
     	Logger logger = LoggerFactory.getLogger(LastFirstTournament.class);
         List<Game> result = new LinkedList<>();
-        Random random;
+        Random random = new Random(System.currentTimeMillis());
         if (game.getPlayers() != null) {
             Map<String, Long> playersLastPlayed = MoreUtil.playersLastPlayed();
 
             LinkedList<String> randomPlayerNames = new LinkedList<String>(game.getPlayers().stream().map { player -> player.getName() }.collect())
-            randomPlayerNames.sort{element -> new Random() }
+            logger.info("før random: " + randomPlayerNames)
+            randomPlayerNames.sort{element -> random.nextLong() }
+            logger.info("efter random: " + randomPlayerNames)
             randomPlayerNames.sort{element -> playersLastPlayed.get(element)}
+            logger.info("efter get: " + randomPlayerNames)
+            logger.info("-----------------")
+
+
             int maxPlayersNeeded = 4 * game.getNumberOfGames()
             if (randomPlayerNames.size() >= 0 && randomPlayerNames.size() <= 3) {
               maxPlayersNeeded = randomPlayerNames.size();
@@ -86,7 +92,7 @@ class LastFirstTournament extends GroovyChainAction {
            }
 
             LinkedList<String> realList = randomPlayerNames.subList(0, maxPlayersNeeded)
-            Collections.shuffle(realList, new Random())
+            Collections.shuffle(realList)
             int count = 0;
 
             while (realList.size() > 0) {
