@@ -61925,15 +61925,18 @@ var RankingListComponent = (function () {
         this.sharedCommunicationService = sharedCommunicationService;
         this.showRankingPeriod = 'hour';
         this.noRankingListAlerts = [];
+        this.soundFanfare = new Audio("/assets/sounds/fanfare.wav");
         this.subscriptionPlayerForStatistics = sharedCommunicationService.playerForStatisticsChanged$.subscribe(function (playerForStatistics) {
             _this.playerForStatistics = playerForStatistics;
         });
         this.subscriptionNewMatchReported = sharedCommunicationService.newMatchReported$.subscribe(function (information) {
             _this.showRankingForPeriod(_this.showRankingPeriod);
+            _this.determineRankingLeaderStatus();
         });
     }
     RankingListComponent.prototype.ngOnInit = function () {
         this.getRankingItems();
+        this.determineRankingLeaderStatus();
     };
     RankingListComponent.prototype.addNoRankingListAlert = function (msg, type) {
         this.noRankingListAlerts.push({ msg: msg, type: type, closable: false });
@@ -61966,6 +61969,81 @@ var RankingListComponent = (function () {
     RankingListComponent.prototype.getRankingItems = function () {
         var _this = this;
         this.rankingItemService.getRankingItems(this.showRankingPeriod).then(function (rankingItems) { return _this.rankingItems = rankingItems; });
+    };
+    RankingListComponent.prototype.determineRankingLeaderStatus = function () {
+        var _this = this;
+        this.rankingItemService.getRankingItems("alltime").then(function (rankingItems) {
+            _this.currentRankingItemsForRankingLeaderStatus = rankingItems;
+            // We will start by finding the current top rated items
+            _this.currentTopRankedRankingItems = new Array();
+            var currentTopPoints = -999;
+            var i = 0;
+            for (var _i = 0, _a = _this.currentRankingItemsForRankingLeaderStatus; _i < _a.length; _i++) {
+                var rankingItem = _a[_i];
+                if (i == 0) {
+                    _this.currentTopRankedRankingItems.push(rankingItem);
+                    currentTopPoints = rankingItem.points;
+                }
+                else if (rankingItem.points == currentTopPoints) {
+                    _this.currentTopRankedRankingItems.push(rankingItem);
+                }
+                i++;
+            }
+            if (_this.previousTopRankedRankingItems == null) {
+                // Do nothing
+                console.log("No previousTopRankedRankingItems so nothing to do here");
+            }
+            else {
+                // Then there was some previous items, so let's do something
+                console.log("We should compare them");
+                var currentAndPreviousDiffer = false;
+                if (_this.currentTopRankedRankingItems.length != _this.previousTopRankedRankingItems.length) {
+                    currentAndPreviousDiffer = true;
+                }
+                else {
+                    // Then they have the same size. Let's see, whether the content is the same in relation to names
+                    _this.currentTopRankedRankingItems = _this.sortRankingItemArray(_this.currentTopRankedRankingItems);
+                    _this.previousTopRankedRankingItems = _this.sortRankingItemArray(_this.previousTopRankedRankingItems);
+                    // Then check that each item is the same
+                    for (var index = 0; index < _this.currentTopRankedRankingItems.length; index++) {
+                        console.log("sammenligner " + _this.currentTopRankedRankingItems[index].name + " og " + _this.previousTopRankedRankingItems[index].name);
+                        if (_this.currentTopRankedRankingItems[index].name != _this.previousTopRankedRankingItems[index].name) {
+                            console.log("De to navne er forskellige");
+                            currentAndPreviousDiffer = true;
+                        }
+                        else {
+                            console.log("De to navne er ens");
+                        }
+                    }
+                }
+                if (currentAndPreviousDiffer) {
+                    _this.soundFanfare.pause();
+                    _this.soundFanfare.currentTime = 0;
+                    _this.soundFanfare.play();
+                    console.log("De er FORSKELLIGE!");
+                }
+                else {
+                    console.log("De er ENS");
+                }
+            }
+            console.log("current");
+            console.log(JSON.stringify(_this.currentTopRankedRankingItems));
+            console.log("previous");
+            console.log(JSON.stringify(_this.previousTopRankedRankingItems));
+            _this.previousTopRankedRankingItems = _this.currentTopRankedRankingItems;
+        });
+    };
+    RankingListComponent.prototype.sortRankingItemArray = function (theArray) {
+        var sortedArray = theArray.sort(function (n1, n2) {
+            if (n1.name.toLocaleLowerCase() > n2.name.toLocaleLowerCase()) {
+                return 1;
+            }
+            if (n1.name.toLocaleLowerCase() < n2.name.toLocaleLowerCase()) {
+                return -1;
+            }
+            return 0;
+        });
+        return sortedArray;
     };
     RankingListComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
