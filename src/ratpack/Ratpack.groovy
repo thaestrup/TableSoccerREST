@@ -12,6 +12,7 @@ ratpack {
         add(new StatisticsPlayersLastPlayed())
         add(new RandomTournament())
         add(new LastFirstTournament())
+        add(new AwesomeAlgorithmTournament())
         add(new PointsPrPlayer())
         add(new TimerActions())
     }
@@ -48,6 +49,10 @@ ratpack {
 
             prefix("lastFirstTournament") {
                 all chain(registry.get(LastFirstTournament))
+            }
+
+            prefix("awesomeAlgorithmTournament") {
+                all chain(registry.get(AwesomeAlgorithmTournament))
             }
         }
 

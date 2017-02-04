@@ -111,7 +111,7 @@ class PointsPrPlayer extends GroovyChainAction {
 
     private LinkedList<PointsPrPlayerPlayer> asdasd(PointsPrPlayerRequest r, response) {
       	Logger logger = LoggerFactory.getLogger(Games.class);
-        Map<String, Integer> scores = new HashMap<>()
+        Map<String, Long> scores = new HashMap<>()
         Map<String, Integer> numberOfGames = new HashMap<>()
 
         response.each { game ->

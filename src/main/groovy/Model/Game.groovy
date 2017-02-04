@@ -12,10 +12,10 @@ public class Game {
     private final String player_red_2;
     private final String player_blue_1;
     private final String player_blue_2;
-    private final String lastUpdated;
+    private String lastUpdated;
     private final String match_winner;
     private final int winning_table;
-    private final int points_at_stake;
+    private int points_at_stake;
 
     Game(@JsonProperty("id") String id,
          @JsonProperty("player_red_1") String player_red_1,
@@ -53,6 +53,10 @@ public class Game {
         return points_at_stake
     }
 
+    void setPoints_at_stake(int tempPoints_at_stake) {
+        points_at_stake = tempPoints_at_stake
+    }
+
     int getId() {
         return id
     }
@@ -75,6 +79,10 @@ public class Game {
 
     String getLastUpdated() {
         return lastUpdated
+    }
+
+    void setLastUpdated(String tempLastUpdated) {
+        lastUpdated = tempLastUpdated
     }
 
     String getMatch_winner() {

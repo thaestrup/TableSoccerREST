@@ -57,7 +57,7 @@ public class MoreUtil {
       DbUtil.query("SELECT * FROM tbl_fights order by ID desc").collect { row -> new Game(row) }
   }
 
-  private static List<Game> getGamesForThisManyHoursBackInTime(String hoursToGoBackInTime) {
+  public static List<Game> getGamesForThisManyHoursBackInTime(String hoursToGoBackInTime) {
       DbUtil.query("SELECT * FROM tbl_fights WHERE timestamp > DATE_SUB(NOW(), INTERVAL " + hoursToGoBackInTime +  " HOUR) order by ID desc").collect { row -> new Game(row) }
   }
 
