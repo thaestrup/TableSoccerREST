@@ -71,7 +71,7 @@ public class AdditionalUtil {
       // So now we have the available players and the max result we should send back (which is the same as the precise result)
       Logger logger = LoggerFactory.getLogger(AdditionalUtil.class);
       // Get all matches 1 hour back
-      List<Game> games = MoreUtil.getGamesForThisManyHoursBackInTime(HOURSTOLOOKBACK);
+      List<Game> games = MoreUtil.getGamesForThisManyHoursBackInTime(HOURSTOLOOKBACK, "");
 
 
       //String currentLastUpdated = "";

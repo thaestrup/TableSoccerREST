@@ -57,8 +57,15 @@ public class MoreUtil {
       DbUtil.query("SELECT * FROM tbl_fights order by ID desc").collect { row -> new Game(row) }
   }
 
-  public static List<Game> getGamesForThisManyHoursBackInTime(String hoursToGoBackInTime) {
+  public static List<Game> getGamesForThisManyHoursBackInTime(String hoursToGoBackInTime, String filter) {
+    if (filter == "onlylunch") {
+        DbUtil.query("SELECT * FROM tbl_fights WHERE (time(timestamp) >= '11:27:00' AND time(timestamp) <= '12:33:59') AND  timestamp > DATE_SUB(NOW(), INTERVAL " + hoursToGoBackInTime +  " HOUR) order by ID desc").collect { row -> new Game(row) }
+    } else if (filter == "elo") {
+      DbUtil.query("SELECT * FROM tbl_fights WHERE timestamp > DATE_SUB(NOW(), INTERVAL " + hoursToGoBackInTime +  " HOUR) order by ID asc").collect { row -> new Game(row) }
+
+    } else {
       DbUtil.query("SELECT * FROM tbl_fights WHERE timestamp > DATE_SUB(NOW(), INTERVAL " + hoursToGoBackInTime +  " HOUR) order by ID desc").collect { row -> new Game(row) }
+    }
   }
 
   private static List<GroovyRowResult> getAllPlayers() {
