@@ -15,6 +15,7 @@ ratpack {
         add(new AwesomeAlgorithmTournament())
         add(new PointsPrPlayer())
         add(new TimerActions())
+        add(new Registrations())
     }
 
     handlers {
@@ -40,6 +41,10 @@ ratpack {
 
         prefix("timer") {
             all chain(registry.get(TimerActions))
+        }
+
+        prefix("registration") {
+            all chain(registry.get(Registrations))
         }
 
         prefix("tournament") {
