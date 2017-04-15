@@ -127,7 +127,7 @@ class Players extends GroovyChainAction {
     }
 
     private String overwritePlayer(Player p, String player) {
-        "overwritePlayer: " + player + ", result: " + DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet) VALUES ('" + player + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "')")
+        "overwritePlayer: " + player + ", result: " + DbUtil.execute("REPLACE INTO tbl_players (name, playerReady, oprettet, registeredRFIDTag) VALUES ('" + player + "', " + (p.getPlayerReady() ? 1 : 0) + ", '" + p.getOprettet() + "' , '" + p.getRegisteredRFIDTag() + "' )")
     }
 
     private String deletePlayer(String player) {
@@ -143,6 +143,6 @@ class Players extends GroovyChainAction {
     }
 
     private String insertPlayer(Player q) {
-        "insertPlayer: " + q.getName() + ", result: " + DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "')")
+        "insertPlayer: " + q.getName() + ", result: " + DbUtil.execute("INSERT INTO tbl_players (name, playerReady, oprettet, registeredRFIDTag) VALUES ('" + q.getName() + "', " + (q.getPlayerReady() ? 1 : 0) + ", '" + q.getOprettet() + "', '" + q.getRegisteredRFIDTag() + "')")
     }
 }

@@ -10,14 +10,29 @@ public class Player {
     private final String name;
     private final boolean playerReady;
     private final String oprettet;
+    private final String registeredRFIDTag;
 
     public Player(@JsonProperty("name") String name,
                   @JsonProperty("playerReady") String playerReady,
-                  @JsonProperty("oprettet") String oprettet) {
+                  @JsonProperty("oprettet") String oprettet,
+                  @JsonProperty("registeredRFIDTag") String registeredRFIDTag) {
         this.name = name;
         this.playerReady = Boolean.valueOf(playerReady);
         this.oprettet = oprettet;
+        this.registeredRFIDTag = registeredRFIDTag;
     }
+
+/*
+    public Player(String name,
+                  String playerReady,
+                  String oprettet,
+                  String registeredRFIDTag) {
+        this.name = name;
+        this.playerReady = Boolean.valueOf(playerReady);
+        this.oprettet = oprettet;
+        this.registeredRFIDTag = registeredRFIDTag;
+    }
+    */
 
     public Player(GroovyRowResult row) {
         if (row.containsKey("name")) {
@@ -25,6 +40,7 @@ public class Player {
         }
         this.playerReady = row.getProperty("playerReady");
         this.oprettet = row.getProperty("oprettet");
+        this.registeredRFIDTag = row.getProperty("registeredRFIDTag");
     }
 
     String getName() {
@@ -37,5 +53,9 @@ public class Player {
 
     String getOprettet() {
         return oprettet
+    }
+
+    String getRegisteredRFIDTag() {
+        return registeredRFIDTag
     }
 }

@@ -46,9 +46,9 @@ public class MoreUtil {
   }
 
   private static insertRFIDTag(String RFIDTag) {
-      DbUtil.execute("CREATE TABLE IF NOT EXISTS `tbl_latest_rfid_registration`(    `id` int(11) UNIQUE NOT NULL, `lastRFIDRegistreredTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, `registreredRFIDTag` varchar(255) NOT NULL )")
+      DbUtil.execute("CREATE TABLE IF NOT EXISTS `tbl_latest_rfid_registration`(    `id` int(11) UNIQUE NOT NULL, `lastRFIDRegisteredTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, `registeredRFIDTag` varchar(255) NOT NULL )")
       DbUtil.execute("DELETE FROM `tbl_latest_rfid_registration`");
-      DbUtil.execute("INSERT IGNORE INTO `tbl_latest_rfid_registration` (id, lastRFIDRegistreredTime, registreredRFIDTag) values (1, NOW(), '" + RFIDTag + "')");
+      DbUtil.execute("INSERT IGNORE INTO `tbl_latest_rfid_registration` (id, lastRFIDRegisteredTime, registeredRFIDTag) values (1, NOW(), '" + RFIDTag + "')");
   }
 
   private static List<TimerAction> getTimerActions() {
