@@ -82,7 +82,7 @@ class Registrations extends GroovyChainAction {
     private Player getPlayer() {
 
     Logger logger = LoggerFactory.getLogger(Registrations.class);
-    logger.info("in getPlayer()")
+    //logger.info("in getPlayer()")
       //return new Player("Name100", "1", "2011-11-11 11:11:11", "100100");
 
       // Do we have a registration row at all?
@@ -97,12 +97,13 @@ class Registrations extends GroovyChainAction {
         return new Player("", "0", "2011-11-11 11:11:11", "");
       } else {
         // We had a registration, let's see if we know it
-        logger.info("We had an registration")
+
         // Ensure that there is no row, until next user registers
         DbUtil.execute("DELETE FROM tbl_latest_rfid_registration")
 
         String registeredRFIDTag = (registrationRows.first()).getProperty('registeredRFIDTag')
-        logger.info("registeredRFIDTag" + registeredRFIDTag)
+        logger.info("We had an registration with registeredRFIDTag: " + registeredRFIDTag)
+        //logger.info("registeredRFIDTag" + registeredRFIDTag)
         List<GroovyRowResult> playerRow = DbUtil.query("SELECT * FROM tbl_players WHERE registeredRFIDTag = '" + registeredRFIDTag + "'" )
         if (playerRow.size > 0) {
           return new Player(playerRow.first());
