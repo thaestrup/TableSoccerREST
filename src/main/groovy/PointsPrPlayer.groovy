@@ -40,6 +40,7 @@ class PointsPrPlayer extends GroovyChainAction {
                     switch (period) {
                       case "alltime":
                         hoursToGoBackInTime = 1000000
+                        filter = "newElo"
                         break
                       case "alltime-onlylunch":
                         hoursToGoBackInTime = 1000000
@@ -127,7 +128,64 @@ class PointsPrPlayer extends GroovyChainAction {
         Map<String, Long> scores = new HashMap<>()
         Map<String, Integer> numberOfGames = new HashMap<>()
 
-        if (filter == "elo") {
+        if (filter == "newElo") {
+
+          response.each { game ->
+            logger.info("Game id: " + game.getAt("id"))
+              def addOne = { String name, Integer score -> score + 1 }
+
+              // Ensure all players have an initial ranking, if they haven't already played before
+              if (game.getAt("player_blue_1") != "null") scores.putIfAbsent(game.getAt("player_blue_1"), 1500)
+              if (game.getAt("player_blue_2") != "null") scores.putIfAbsent(game.getAt("player_blue_2"), 1500)
+              if (game.getAt("player_red_1") != "null") scores.putIfAbsent(game.getAt("player_red_1"), 1500)
+              if (game.getAt("player_red_2") != "null") scores.putIfAbsent(game.getAt("player_red_2"), 1500)
+
+              // Ensure all players are registred in the numberOfGames, if they haven't already played before
+              if (game.getAt("player_blue_1") != "null") numberOfGames.putIfAbsent(game.getAt("player_blue_1"), 0)
+              if (game.getAt("player_blue_2") != "null") numberOfGames.putIfAbsent(game.getAt("player_blue_2"), 0)
+              if (game.getAt("player_red_1") != "null") numberOfGames.putIfAbsent(game.getAt("player_red_1"), 0)
+              if (game.getAt("player_red_2") != "null") numberOfGames.putIfAbsent(game.getAt("player_red_2"), 0)
+
+
+              // Add to number of games
+              if (game.getAt("player_blue_1") != "null") numberOfGames.computeIfPresent(game.getAt("player_blue_1"), addOne)
+              if (game.getAt("player_blue_2") != "null") numberOfGames.computeIfPresent(game.getAt("player_blue_2"), addOne)
+              if (game.getAt("player_red_1") != "null") numberOfGames.computeIfPresent(game.getAt("player_red_1"), addOne)
+              if (game.getAt("player_red_2") != "null") numberOfGames.computeIfPresent(game.getAt("player_red_2"), addOne)
+
+
+              // Then add their games
+              if (game.getAt("match_winner").equals("blue")) {
+                  if (game.getAt("player_blue_1") != "null") scores.computeIfPresent(game.getAt("player_blue_1"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_blue_2") != "null") scores.computeIfPresent(game.getAt("player_blue_2"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_red_1") != "null") scores.computeIfPresent(game.getAt("player_red_1"), { String name, Integer score -> score - game.getAt("points_at_stake") })
+                  if (game.getAt("player_red_2") != "null") scores.computeIfPresent(game.getAt("player_red_2"), { String name, Integer score -> score - game.getAt("points_at_stake") })
+                  if (game.getAt("player_blue_1") != "null") scores.putIfAbsent(game.getAt("player_blue_1"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_blue_2") != "null") scores.putIfAbsent(game.getAt("player_blue_2"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_red_1") != "null") scores.putIfAbsent(game.getAt("player_red_1"), -1 * game.getAt("points_at_stake"))
+                  if (game.getAt("player_red_2") != "null") scores.putIfAbsent(game.getAt("player_red_2"), -1 * game.getAt("points_at_stake"))
+              } else if (game.getAt("match_winner").equals("red")) {
+                  if (game.getAt("player_red_1") != "null") scores.computeIfPresent(game.getAt("player_red_1"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_red_2") != "null") scores.computeIfPresent(game.getAt("player_red_2"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_blue_1") != "null") scores.computeIfPresent(game.getAt("player_blue_1"), { String name, Integer score -> score - game.getAt("points_at_stake") })
+                  if (game.getAt("player_blue_2") != "null") scores.computeIfPresent(game.getAt("player_blue_2"), { String name, Integer score -> score - game.getAt("points_at_stake") })
+                  if (game.getAt("player_red_1") != "null") scores.putIfAbsent(game.getAt("player_red_1"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_red_2") != "null") scores.putIfAbsent(game.getAt("player_red_2"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_blue_1") != "null") scores.putIfAbsent(game.getAt("player_blue_1"), -1 * game.getAt("points_at_stake"))
+                  if (game.getAt("player_blue_2") != "null") scores.putIfAbsent(game.getAt("player_blue_2"), -1 * game.getAt("points_at_stake"))
+              } else if (game.getAt("match_winner").equals("draw")) {
+                  if (game.getAt("player_red_1") != "null") scores.computeIfPresent(game.getAt("player_red_1"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_red_2") != "null") scores.computeIfPresent(game.getAt("player_red_2"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_blue_1") != "null") scores.computeIfPresent(game.getAt("player_blue_1"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_blue_2") != "null") scores.computeIfPresent(game.getAt("player_blue_2"), { String name, Integer score -> score + game.getAt("points_at_stake") })
+                  if (game.getAt("player_red_1") != "null") scores.putIfAbsent(game.getAt("player_red_1"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_red_2") != "null") scores.putIfAbsent(game.getAt("player_red_2"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_blue_1") != "null") scores.putIfAbsent(game.getAt("player_blue_1"), game.getAt("points_at_stake"))
+                  if (game.getAt("player_blue_2") != "null") scores.putIfAbsent(game.getAt("player_blue_2"), game.getAt("points_at_stake"))
+              }
+
+          }
+        } else if (filter == "theOldEloWhichWeDontUse") {
 
           response.each { game ->
             logger.info("Game id: " + game.getAt("id"))
@@ -158,15 +216,17 @@ class PointsPrPlayer extends GroovyChainAction {
               } else {
                 // Here we are working with winners and loosers
 
-                float blueWins;
-                float redWins;
-                if (game.getAt("match_winner").equals("blue")) {
-                  blueWins = 1;
-                  redWins = 0;
-                } else {
-                  blueWins = 0;
-                  redWins = 1;
-                }
+                /*
+                  float blueWins;
+                  float redWins;
+                  if (game.getAt("match_winner").equals("blue")) {
+                    blueWins = 1;
+                    redWins = 0;
+                  } else {
+                    blueWins = 0;
+                    redWins = 1;
+                  }
+                */
 
                 int blueEloRanking;
                 int redEloRanking;
