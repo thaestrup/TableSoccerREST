@@ -122,8 +122,7 @@ class Players extends GroovyChainAction {
     }
 
     private GroovyRowResult getPlayer(String player) {
-        DbUtil.query("SELECT * FROM tbl_players WHERE name = '" + player + "'")
-                .first()
+        DbUtil.query("SELECT * FROM tbl_players WHERE name = '" + player + "'").first()
     }
 
     private String overwritePlayer(Player p, String player) {
