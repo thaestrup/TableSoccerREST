@@ -43877,15 +43877,6 @@ var AvailablePlayersComponent = (function () {
             .subscribe(function (data) {
             _this.inverseSelectionForPlayer(data);
         });
-        /*
-            //Kode til at reagere på det (fjern det herfra senere)
-            sharedCommunicationService.registeredPlayerChanged$.subscribe(
-              registeredPlayer => {
-                this.inverseSelectionForPlayer(registeredPlayer);
-              }
-        
-            )
-            */
     }
     AvailablePlayersComponent.prototype.getImageUrl = function (playerName) {
         if (playerName == null) {
@@ -43995,8 +43986,8 @@ var AvailablePlayersComponent = (function () {
             this.addPlayerAlert('Navn/initialer \'' + name + '\' kan ikke benyttes, da der allerede findes en spiller med dette navn/initialer (\'' + theNameThatExists + '\')', 'danger');
             return;
         }
-        if (name.length > 10) {
-            this.addPlayerAlert('Navn/initialer må maks. bestå af 10 bogstaver/tal', 'danger');
+        if (name.length > 20) {
+            this.addPlayerAlert('Navn/initialer må maks. bestå af 20 bogstaver/tal', 'danger');
             return;
         }
         if (name.includes(' ')) {
@@ -44419,7 +44410,6 @@ var PlayerService = (function () {
             .toPromise()
             .then(function (response) { return response.json(); })
             .catch(this.handleError);
-        //return Promise.resolve(PLAYERS);
     };
     PlayerService.prototype.create = function (name, playerReady, created) {
         return this.http
