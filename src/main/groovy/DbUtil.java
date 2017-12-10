@@ -14,8 +14,9 @@ import org.slf4j.LoggerFactory;
  * Created by super on 30/10/2016.
  */
 public class DbUtil {
-    public static final String url = "jdbc:mysql://localhost:3306/NykreditFoosballUnity?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=CET&verifyServerCertificate=false&useSSL=false";
-    public static final String user = "root";
+
+    public static final String url = "jdbc:mysql://localhost:3306/nykreditfoosballunity?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=CET&verifyServerCertificate=false&useSSL=false";
+    public static final String user = "football";
     public static final String password = "";
     public static final String driver = "com.mysql.cj.jdbc.Driver";
     //static final Logger logger = LoggerFactory.getLogger(DbUtil.class);

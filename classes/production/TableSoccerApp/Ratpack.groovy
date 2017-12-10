@@ -7,8 +7,8 @@ import static groovy.json.JsonOutput.toJson
 
 class DatabaseConfig {
     String host = "localhost"
-    String user = "root"
-    String password
+    String user = "football"
+    String password = ""
     String db = "myDB"
 }
 
