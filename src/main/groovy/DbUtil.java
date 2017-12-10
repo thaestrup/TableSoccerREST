@@ -1,10 +1,11 @@
-import groovy.sql.GroovyRowResult;
 import groovy.sql.Sql;
 
 import java.sql.SQLException;
 import java.util.List;
 
+import groovy.sql.GroovyRowResult;
 import groovy.util.logging.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +17,10 @@ public class DbUtil {
     public static final String url = "jdbc:mysql://localhost:3306/NykreditFoosballUnity?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=CET&verifyServerCertificate=false&useSSL=false";
     public static final String user = "root";
     public static final String password = "";
-    public static final String driver = "com.mysql.jdbc.Driver";
+    public static final String driver = "com.mysql.cj.jdbc.Driver";
+    //static final Logger logger = LoggerFactory.getLogger(DbUtil.class);
 
     public static String execute(String query) {
-        //Logger logger = LoggerFactory.getLogger(DbUtil.class);
         Sql sql = null;
         String resultID = "ERROR";
         try {
@@ -64,7 +65,7 @@ public class DbUtil {
 
     public static List<GroovyRowResult> query(String query) throws SQLException, ClassNotFoundException {
         //Logger logger = LoggerFactory.getLogger(DbUtil.class);
-        //logger.info("In query");
+        //logger.info("In query user:{} pass:{} url:{}", user, password, url);
         Sql sql = Sql.newInstance(url, user, password, driver);
         try {
             //logger.info("In try in query");
