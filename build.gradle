@@ -3,8 +3,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "io.ratpack:ratpack-gradle:1.4.1"
-        classpath "com.github.jengelman.gradle.plugins:shadow:1.2.3"
+        classpath "io.ratpack:ratpack-gradle:1.6.0"
+        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.2"
     }
 }
 
@@ -19,6 +19,8 @@ repositories {
         url "http://central.maven.org/maven2/"
     }
 }
+compileJava.options.encoding = 'UTF-8'
+//options.encoding = 'UTF-8'
 
 dependencies {
     // https://mvnrepository.com/artifact/mysql/mysql-connector-java
