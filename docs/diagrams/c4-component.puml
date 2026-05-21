@@ -1,0 +1,79 @@
+@startuml c4-component
+!include <C4/C4_Component>
+
+LAYOUT_WITH_LEGEND()
+
+title TableSoccerREST (Quarkus) — C4 Component Diagram
+
+Container_Ext(frontend, "Frontend", "React + Vite", "SPA — see c4-container.puml")
+ContainerDb_Ext(db, "MariaDB", "10.11")
+
+Container_Boundary(backend, "Backend (Quarkus 3.35)") {
+
+    Component(playersResource,        "PlayersResource",        "JAX-RS, /players",                  "GET /players, GET /players/{name}, POST /players (array body), PUT /players/{name}. Plain-text write responses match legacy.")
+    Component(gamesResource,          "GamesResource",          "JAX-RS, /games",                    "GET /games, GET /games/{periodOrName}, POST /games, DELETE /games. The {token} overload routes period names → period filter, otherwise → player-name filter.")
+    Component(configurationResource,  "ConfigurationResource",  "JAX-RS, /configuration",            "GET /configuration — table-name keys + numberOfTables.")
+    Component(timerResource,          "TimerResource",          "JAX-RS, /timer",                    "GET /timer — singleton row in array wrapper.")
+    Component(statisticsResource,     "StatisticsResource",     "JAX-RS, /statisticsPlayersLastPlayed", "GET — per-player last-game timestamp map.")
+    Component(tournamentResource,     "TournamentResource",     "JAX-RS, /tournament",               "POST .../random|lastFirst|awesomeAlgorithm — generates pairings.")
+    Component(pointsResource,         "PointsResource",         "JAX-RS, /pointsPrPlayer",           "GET /pointsPrPlayer/{period} — Elo leaderboard.")
+
+    Component(playerService,          "PlayerService",                    "CDI bean (planned)",                          "Wraps Panache queries on Player.")
+    Component(gameService,            "GameService",                      "CDI bean (planned)",                          "Wraps Panache queries on Game (tbl_fights).")
+    Component(eloService,             "EloService",                       "CDI bean (planned)",                          "Pure-function Elo computation. Default `newElo` strategy only — three legacy filters dropped.")
+    Component(tournamentService,      "TournamentPairingService",         "CDI bean (planned)",                          "Ports legacy AdditionalUtil.generateAwesomeList plus the lastFirst / random algorithms.")
+
+    Component(playerMapper,           "PlayerMapper / GameMapper / …",    "Static converters",                           "Bridge JPA entity ↔ DTO (camelCase ↔ snake_case, LocalDateTime ↔ legacy Timestamp string).")
+
+    ComponentDb(playerEntity,         "Player / Game / ConfigurationItem / TimerState",  "Panache entities (Hibernate ORM)", "tbl_players / tbl_fights / tbl_configuration / tbl_timer.")
+
+    Component(flyway,                 "Flyway migrations",                "src/main/resources/db/migration/",            "V1 schema init, V2 indices, V3 dev seed. Runs on startup.")
+    Component(health,                 "Health & Metrics",                 "SmallRye Health + Micrometer + OpenAPI",      "GET /q/health/{live,ready}, /q/metrics, /q/openapi, /q/swagger-ui.")
+    Component(corsFilter,             "CORS filter",                      "Quarkus built-in",                            "Configured via quarkus.http.cors.* — replaces the per-handler header soup in legacy code.")
+}
+
+Rel(frontend, corsFilter, "JSON HTTP", "fetch")
+Rel(corsFilter, playersResource,        "")
+Rel(corsFilter, gamesResource,          "")
+Rel(corsFilter, configurationResource,  "")
+Rel(corsFilter, timerResource,          "")
+Rel(corsFilter, statisticsResource,     "")
+Rel(corsFilter, tournamentResource,     "")
+Rel(corsFilter, pointsResource,         "")
+
+Rel(playersResource,        playerService,         "")
+Rel(gamesResource,          gameService,           "")
+Rel(tournamentResource,     tournamentService,     "uses")
+Rel(pointsResource,         eloService,            "uses")
+Rel(pointsResource,         gameService,           "reads games")
+Rel(statisticsResource,     gameService,           "reads")
+
+Rel(playerService,    playerMapper, "uses")
+Rel(gameService,      playerMapper, "uses")
+
+Rel(playerService,    playerEntity, "Panache CRUD")
+Rel(gameService,      playerEntity, "Panache CRUD")
+Rel(eloService,       playerEntity, "reads")
+Rel(tournamentService,playerEntity, "reads players + recent games")
+Rel(configurationResource, playerEntity, "Panache CRUD")
+Rel(timerResource,         playerEntity, "Panache CRUD")
+
+Rel(playerEntity, db, "JDBC", "mariadb-java-client")
+Rel(flyway,        db, "DDL", "Flyway on startup")
+
+note right of eloService
+  Legacy `PointsPrPlayer.asdasd` had four
+  branches (newElo, theOldEloWhichWeDontUse,
+  ratiofocus, default). Frontend audit
+  (FRONTEND-USAGE.md) confirmed only the
+  default `newElo` branch is reachable.
+  Three filters dropped from scope.
+end note
+
+note bottom of flyway
+  No more runtime CREATE TABLE IF NOT EXISTS
+  in handler code (was MoreUtil.groovy:39-52
+  in the legacy implementation).
+end note
+
+@enduml

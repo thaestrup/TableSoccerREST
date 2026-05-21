@@ -1,0 +1,173 @@
+@startuml class-model
+title TableSoccerREST (Quarkus) — Domain & Wire Model
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide circle
+
+' ============================================================================
+' Domain (JPA entities, com.foosball.domain)
+' Backed by tbl_players / tbl_fights / tbl_configuration / tbl_timer.
+' All extend Panache's PanacheEntityBase (omitted here for clarity).
+' ============================================================================
+
+package "com.foosball.domain  <<JPA entities>>" #DDEBF7 {
+
+  class Player <<@Entity tbl_players>> {
+    +id : Long  <<@Id auto>>
+    +name : String  <<@Size(20), unique>>
+    +playerReady : boolean
+    +oprettet : LocalDateTime
+    +registeredRFIDTag : String
+  }
+
+  class Game <<@Entity tbl_fights>> {
+    +id : Long  <<@Id auto>>
+    +playerRed1 : String  <<@Size(200), col player_red_1>>
+    +playerRed2 : String  <<@Size(200), col player_red_2>>
+    +playerBlue1 : String  <<@Size(200), col player_blue_1>>
+    +playerBlue2 : String  <<@Size(200), col player_blue_2>>
+    +timestamp : LocalDateTime
+    +matchWinner : String  <<@Size(20), col match_winner>>
+    +pointsAtStake : int  <<col points_at_stake (renamed from points_at_steake)>>
+    +winningTable : int  <<col winning_table>>
+  }
+
+  class ConfigurationItem <<@Entity tbl_configuration>> {
+    +name : String  <<@Id, @Size(255), unique>>
+    +value : String  <<@Size(255)>>
+  }
+
+  class TimerState <<@Entity tbl_timer>> {
+    +id : Integer  <<@Id, unique>>
+    +lastRequestedTimerStart : LocalDateTime
+  }
+}
+
+' ============================================================================
+' DTOs (wire shapes, com.foosball.dto)
+' All `record`s. Field/JSON-key names preserved for legacy frontend parity.
+' ============================================================================
+
+package "com.foosball.dto  <<wire DTOs>>" #FFF2CC {
+
+  class PlayerDto <<record>> {
+    name : String
+    playerReady : boolean
+    oprettet : String  <<legacy Timestamp.toString()>>
+    registeredRFIDTag : String
+  }
+
+  class GameDto <<record>> {
+    id : Long
+    playerRed1 : String  <<JSON player_red_1>>
+    playerRed2 : String  <<JSON player_red_2>>
+    playerBlue1 : String  <<JSON player_blue_1>>
+    playerBlue2 : String  <<JSON player_blue_2>>
+    lastUpdated : String  <<from DB col `timestamp`>>
+    matchWinner : String  <<JSON match_winner>>
+    pointsAtStake : int  <<JSON points_at_stake>>
+    winningTable : int  <<JSON winning_table>>
+  }
+
+  class ConfigurationItemDto <<record>> {
+    name : String
+    value : String
+  }
+
+  class TimerActionDto <<record>> {
+    id : int
+    lastRequestedTimerStart : String  <<legacy Timestamp.toString()>>
+  }
+
+  class GamesPostRequestDto <<record>> {
+    numberOfGames : int
+    players : List<PlayerDto>
+  }
+
+  class GamesPostResponseDto <<record>> {
+    newGameIDs : List<String>
+  }
+
+  class TournamentGameRoundDto <<record>> {
+    tournamentGames : List<GameDto>
+  }
+
+  class PointsRequestDto <<record>> {
+    winnerPoints : int
+    loserPoints : int
+    drawPoints : int
+  }
+
+  class PointsPlayerDto <<record>> {
+    position : int
+    points : int
+    numberOfGames : int
+    name : String
+  }
+}
+
+' ============================================================================
+' Mappers (com.foosball.dto.*Mapper)
+' Static, stateless. Bridge LocalDateTime ↔ legacy Timestamp.toString() format.
+' ============================================================================
+
+package "com.foosball.dto  <<mappers>>" #E1D5E7 {
+
+  class PlayerMapper <<utility>> {
+    +{static} toDto(p : Player) : PlayerDto
+    +{static} apply(dto : PlayerDto, target : Player, overrideName : String) : void
+  }
+
+  note right of PlayerMapper
+    Sister mappers GameMapper / TimerMapper /
+    ConfigurationMapper land alongside this
+    one in Phase 2.2–2.4.
+  end note
+}
+
+' ============================================================================
+' Relationships
+' ============================================================================
+
+' Composition / aggregation in DTO graph.
+' GamesPostResponseDto holds a List<String> — captured in the field
+' list above; not drawn as an association to avoid a phantom String class.
+GamesPostRequestDto       *-- "0..*" PlayerDto              : players
+TournamentGameRoundDto    *-- "0..*" GameDto                : tournamentGames
+
+' Mapper bridges entity ↔ DTO
+PlayerMapper ..> Player    : maps from
+PlayerMapper ..> PlayerDto : maps to
+
+' Game ↔ Player are NOT FK-linked. tbl_fights stores player names as strings,
+' not player.id references. Captured here as a dependency note rather than
+' a UML association so future refactors (Phase 6 cleanup) are visible.
+Game ..> Player : <<denormalized>>\n4× name strings,\nno FK
+
+' Wire-to-entity name parity (informational, not a UML association)
+PlayerDto         ..> Player            : <<wire of>>
+GameDto           ..> Game              : <<wire of>>
+ConfigurationItemDto ..> ConfigurationItem : <<wire of>>
+TimerActionDto    ..> TimerState        : <<wire of>>
+
+' ============================================================================
+' Legend
+' ============================================================================
+
+legend right
+  | Color | Layer |
+  |<#DDEBF7>| Domain — JPA entities (Hibernate / Panache) |
+  |<#FFF2CC>| DTOs — wire shapes (Java records, immutable) |
+  |<#E1D5E7>| Mappers — static converters |
+
+  Notes:
+  - Entities extend Panache PanacheEntityBase (omitted).
+  - All DTOs are `record`s; Jackson auto-binds.
+  - Date wire format is legacy `Timestamp.toString()`,
+    not ISO-8601 — see PlayerDto / GameDto / TimerActionDto.
+  - Points-at-stake DB column was misspelled
+    `points_at_steake` in legacy; renamed in Flyway V1.
+endlegend
+
+@enduml

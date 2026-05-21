@@ -1,0 +1,55 @@
+####
+# Multi-stage build for the Quarkus application in JVM (fast-jar) mode.
+#
+# This is the fallback path: ~150 MB image, builds in seconds, no Mandrel
+# required. Ships if a native-image-specific bug blocks a release.
+#
+# Build:
+#   podman build -f src/main/docker/Dockerfile.jvm -t foosball/backend-jvm .
+#
+# Run:
+#   podman run -i --rm -p 5051:5051 foosball/backend-jvm
+####
+
+## ---- Stage 1: Maven build via Temurin JDK ---------------------------------
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /code
+
+# Wrapper + descriptor first for dependency-layer caching.
+COPY mvnw pom.xml /code/
+COPY .mvn /code/.mvn
+RUN ./mvnw -B dependency:go-offline -DskipTests
+
+COPY src /code/src
+RUN ./mvnw -B package -DskipTests
+
+## ---- Stage 2: minimal JRE runtime -----------------------------------------
+FROM eclipse-temurin:21-jre
+
+# Temurin's image runs as root by default; create an unprivileged user. uid
+# 1001 matches the Quarkus convention used by the native image so volume
+# permissions line up if both variants share a mount.
+RUN groupadd --system --gid 1001 app \
+    && useradd --system --uid 1001 --gid app --home-dir /deployments --shell /sbin/nologin app \
+    && mkdir -p /deployments \
+    && chown -R 1001:1001 /deployments
+
+WORKDIR /deployments
+
+# Fast-jar layout: four directories so application changes don't bust the
+# (much larger) dependency layer.
+COPY --chown=1001:1001 --from=build /code/target/quarkus-app/lib/      /deployments/lib/
+COPY --chown=1001:1001 --from=build /code/target/quarkus-app/*.jar     /deployments/
+COPY --chown=1001:1001 --from=build /code/target/quarkus-app/app/      /deployments/app/
+COPY --chown=1001:1001 --from=build /code/target/quarkus-app/quarkus/  /deployments/quarkus/
+
+EXPOSE 5051
+USER 1001
+
+# HEALTHCHECK intentionally omitted: eclipse-temurin:21-jre is ubuntu-based
+# and ships neither curl nor wget. Adding apt-get install bloats the image
+# and a layer for one probe is not worth it -- have the orchestrator
+# (compose / k8s) probe /q/health/ready (provided by quarkus-smallrye-health)
+# from outside the container instead.
+
+ENTRYPOINT ["java", "-Dquarkus.http.host=0.0.0.0", "-jar", "/deployments/quarkus-run.jar"]
