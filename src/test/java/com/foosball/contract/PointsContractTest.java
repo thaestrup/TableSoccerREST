@@ -1,6 +1,7 @@
 package com.foosball.contract;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -8,29 +9,14 @@ import java.util.List;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Contract tests for the PointsPrPlayer resource (legacy:
- * {@code PointsPrPlayer.groovy}, default "newElo" branch).
- *
- * <p>Reference fixtures: {@code points-alltime.json}, {@code points-week.json},
- * {@code points-month.json}, {@code points-day.json}.
- *
- * <p>Documented quirks:
- * <ul>
- *   <li>Returns a JSON array of {@code {position, points, numberOfGames, name}}
- *       objects. All four fields are read by the frontend; all must be
- *       present and non-null.</li>
- *   <li>{@code position} starts at 1. With ties, the same {@code position}
- *       value can repeat for tied players (e.g. {@code 1, 1, 3, 3}). The
- *       sequence is non-decreasing — assert that, not strict monotonicity.</li>
- *   <li>The five frontend-supported period tokens are
- *       {@code hour|day|week|month|alltime}. The dropped filter tokens
- *       ({@code alltime-elo}, {@code alltime-onlylunch},
- *       {@code alltime-ratiofocus}) are NOT exercised by this suite — see
- *       FRONTEND-USAGE.md drop list.</li>
- * </ul>
+ * Contract tests for the PointsPrPlayer resource. Returns a JSON array of
+ * {@code {position, points, numberOfGames, name}} sorted by points
+ * descending; tied scores produce repeated {@code position} values
+ * (e.g. {@code 1, 1, 3, 3}). Period tokens: {@code hour|day|week|month|alltime}.
  */
 class PointsContractTest extends ContractSuite {
 
@@ -82,6 +68,79 @@ class PointsContractTest extends ContractSuite {
                                 + " (got " + position + " after " + previousPosition + ")");
                 previousPosition = position;
             }
+        }
+    }
+
+    @Test
+    void deletedPlayer_droppedFromRankings_existingScoresUnchanged() {
+        // Create a temp player + partner, play a game, then delete the temp.
+        // The temp player's entry must be REMOVED from /pointsPrPlayer (not
+        // renamed to "Deleted player"); their game still contributes to the
+        // partner's score, so the partner's points must be unchanged.
+        String ghost = "GhostTestP";
+        String partner = "ContractTestPlayer";
+
+        given().when().delete("/players/" + ghost);
+        ensurePlayer(ghost);
+        ensurePlayer(partner);
+
+        String gameBody = "[{\"player_red_1\":\"" + ghost + "\","
+                + "\"player_red_2\":\"" + partner + "\","
+                + "\"player_blue_1\":\"" + partner + "\","
+                + "\"player_blue_2\":\"" + ghost + "\","
+                + "\"lastUpdated\":\"2026-05-25 12:00:00.0\","
+                + "\"match_winner\":\"red\",\"points_at_stake\":7,\"winning_table\":1}]";
+        given().header("Content-Type", "application/json").body(gameBody)
+                .when().post("/games/").then().statusCode(200);
+
+        JsonNode before = given().when().get("/pointsPrPlayer/alltime")
+                .then().statusCode(200)
+                .extract().body().as(JsonNode.class);
+        assertTrue(streamNames(before).anyMatch(n -> n.equals(ghost)),
+                "ghost player must appear by name before deletion");
+
+        given().when().delete("/players/" + ghost).then().statusCode(200);
+
+        JsonNode after = given().when().get("/pointsPrPlayer/alltime")
+                .then().statusCode(200)
+                .extract().body().as(JsonNode.class);
+        assertFalse(streamNames(after).anyMatch(n -> n.equals(ghost)),
+                "deleted player must no longer appear by their real name");
+        assertFalse(streamNames(after).anyMatch(n -> n.equals("Deleted player")),
+                "deleted player must not appear in rankings under any name");
+
+        JsonNode partnerBefore = findByName(before, partner);
+        JsonNode partnerAfter = findByName(after, partner);
+        assertNotEquals(null, partnerBefore, "partner must exist before");
+        assertNotEquals(null, partnerAfter, "partner must exist after");
+        assertEquals(partnerBefore.get("points").asInt(),
+                partnerAfter.get("points").asInt(),
+                "partner's points must not change when their opponent is deleted");
+    }
+
+    private static java.util.stream.Stream<String> streamNames(JsonNode arr) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (JsonNode r : arr) out.add(r.get("name").asText());
+        return out.stream();
+    }
+
+    private static JsonNode findByName(JsonNode arr, String name) {
+        for (JsonNode r : arr) if (r.get("name").asText().equals(name)) return r;
+        return null;
+    }
+
+    private static void ensurePlayer(String name) {
+        String body = "[{\"name\":\"" + name
+                + "\",\"playerReady\":true,\"oprettet\":\"2026-05-25 21:00:00.0\","
+                + "\"registeredRFIDTag\":\"\"}]";
+        given().header("Content-Type", "application/json").body(body)
+                .when().post("/players/").then().statusCode(200);
+    }
+
+    @AfterAll
+    static void cleanup() {
+        for (String n : new String[] {"GhostTestP", "ContractTestPlayer"}) {
+            given().when().delete("/players/" + n);
         }
     }
 }

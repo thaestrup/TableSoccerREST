@@ -10,44 +10,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Pure leaderboard ranker — port of the {@code asdasd} method in the legacy
- * {@code PointsPrPlayer.groovy}.
+ * Pure leaderboard ranker. Walks a list of {@link Game} rows and produces a
+ * sorted {@link PointsPlayerDto} list.
  *
- * <p>The legacy switch dispatches the request to one of four strategy
- * branches via a {@code filter} string:
+ * <p>Math per game: the winning side gains {@code points_at_stake}, the
+ * losing side loses the same amount; draws credit both sides. Players
+ * start at 1500 for the {@code alltime} window and at 0 for the rolling
+ * windows ({@code hour}/{@code day}/{@code week}/{@code month}).
+ *
+ * <p>Behavior:
  * <ul>
- *   <li>{@code "newElo"} — used for the {@code alltime} period token.
- *       Initializes every encountered player at 1500 points and applies
- *       {@code ± points_at_stake} per game.</li>
- *   <li>{@code "theOldEloWhichWeDontUse"} — dead branch, never reached.</li>
- *   <li>{@code "ratiofocus"} — only reached by {@code alltime-ratiofocus}
- *       (dropped per FRONTEND-USAGE.md).</li>
- *   <li>{@code ""} (the default {@code else} branch) — used for
- *       {@code month}, {@code week}, {@code day}, {@code hour}. Same
- *       per-game {@code ± points_at_stake} math as {@code newElo} but
- *       starts each player at 0 instead of 1500.</li>
- * </ul>
- *
- * <p>The two relevant branches collapse into one algorithm parameterised on
- * the starting score: 1500 for {@code alltime}, 0 for the rolling windows.
- * The captured fixtures confirm this — {@code points-alltime.json}'s scores
- * differ from {@code points-week.json}'s by exactly 1500 for every player.
- *
- * <p>Quirks preserved:
- * <ul>
- *   <li>The legacy compares {@code game.player_blue_2 != "null"} (string
- *       comparison against the literal {@code "null"}) because the legacy
- *       DB stored absent slots as the four-character string {@code "null"}.
- *       Mirrored here so re-imported legacy rows still rank correctly.</li>
- *   <li>Players with zero games never enter the score map.</li>
+ *   <li>Player slots equal to the literal {@code "null"} string (or actual
+ *       {@code null}) are ignored — that's the empty-back-row sentinel
+ *       used for 1v1/2v1 games.</li>
+ *   <li>Players with zero games never appear.</li>
  *   <li>Tied scores produce repeated {@code position} values
- *       ({@code 1, 1, 3, 3}).</li>
- *   <li>Unknown {@code match_winner} values (anything other than
- *       {@code red}/{@code blue}/{@code draw}) are skipped — the entry is
- *       still seeded at the starting score and counted toward
- *       {@code numberOfGames}, matching the legacy behavior of running the
- *       {@code putIfAbsent} initializers on every game regardless of
- *       winner.</li>
+ *       (e.g. {@code 1, 1, 3, 3}).</li>
+ *   <li>Unknown {@code match_winner} values (not {@code red}/{@code blue}/{@code draw})
+ *       count toward {@code numberOfGames} but apply no delta.</li>
  * </ul>
  */
 @ApplicationScoped
@@ -57,18 +37,12 @@ public class EloService {
     private static final int DEFAULT_START = 0;
     private static final String NULL_SLOT = "null";
 
-    /**
-     * Rank players using the {@code newElo} starting score (1500). Used for
-     * the {@code alltime} period token.
-     */
+    /** Rank using starting score 1500 (the {@code alltime} window). */
     public List<PointsPlayerDto> rankWithEloStart(List<Game> games) {
         return rank(games, ELO_START);
     }
 
-    /**
-     * Rank players using the default starting score (0). Used for the
-     * {@code hour}/{@code day}/{@code week}/{@code month} period tokens.
-     */
+    /** Rank using starting score 0 (the rolling-window periods). */
     public List<PointsPlayerDto> rankWithDefaultStart(List<Game> games) {
         return rank(games, DEFAULT_START);
     }
@@ -106,8 +80,7 @@ public class EloService {
                 applyDelta(scores, game.playerRed1, delta);
                 applyDelta(scores, game.playerRed2, delta);
             }
-            // Unknown winner: skip delta application (defensive — schema
-            // permits any 20-char string).
+            // Unknown winner: skip delta application.
         }
 
         return assemble(scores, numberOfGames);

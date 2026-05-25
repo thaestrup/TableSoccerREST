@@ -8,12 +8,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * JPA entity for the legacy {@code tbl_configuration} table.
- *
- * <p>The legacy schema has no surrogate id; {@code name} is the unique
- * logical key so it acts as the JPA {@code @Id}.
- */
+/** JPA entity for {@code tbl_configuration}. {@code name} is the primary key. */
 @Entity
 @Table(name = "tbl_configuration")
 public class ConfigurationItem extends PanacheEntityBase {

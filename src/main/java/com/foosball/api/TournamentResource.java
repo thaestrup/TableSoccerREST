@@ -15,34 +15,24 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 /**
- * Tournament resource — port of legacy
- * {@code RandomTournament.groovy}, {@code LastFirstTournament.groovy},
- * and {@code AwesomeAlgorithmTournament.groovy}.
+ * Tournament pairing endpoints.
  *
- * <p>Wire contract preserved (intentional shape divergence — see
- * {@code TournamentContractTest}):
  * <ul>
- *   <li>{@code POST /tournament/randomTournament} returns a flat
- *       {@code List<GameDto>}, NOT a rounds wrapper.</li>
- *   <li>{@code POST /tournament/lastFirstTournament} returns
- *       {@code List<TournamentGameRoundDto>} (one round, currently).</li>
- *   <li>{@code POST /tournament/awesomeAlgorithmTournament} returns
- *       {@code List<TournamentGameRoundDto>} (one round, currently).</li>
+ *   <li>{@code POST /tournament/randomTournament} → flat {@code List<GameDto>}.</li>
+ *   <li>{@code POST /tournament/lastFirstTournament} →
+ *       {@code List<TournamentGameRoundDto>} (one round per element).</li>
+ *   <li>{@code POST /tournament/awesomeAlgorithmTournament} →
+ *       {@code List<TournamentGameRoundDto>}.</li>
  * </ul>
  *
- * <p>OPTIONS preflight is handled by the global CORS filter — we do
- * not register OPTIONS handlers here.
+ * <p>{@link TxType#NEVER}: tournament generation is read-only. The awesome
+ * algorithm mutates loaded {@code Game.pointsAtStake} fields in memory for
+ * scoring; running outside a transaction guarantees those mutations cannot
+ * flush back to the database.
  */
 @Path("/tournament")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-// Defense-in-depth: tournament generation is read-only. The awesome
-// algorithm mutates Game.pointsAtStake on loaded entities for in-memory
-// scoring (see TournamentPairingService.generateAwesomeList line 283).
-// Empirical test 2026-05-10 confirmed those mutations do NOT flush in the
-// current Quarkus/Hibernate config, but @Transactional(NEVER) makes the
-// invariant explicit so a future change can't silently start writing
-// pointsAtStake deltas back to the DB.
 @Transactional(TxType.NEVER)
 public class TournamentResource {
 

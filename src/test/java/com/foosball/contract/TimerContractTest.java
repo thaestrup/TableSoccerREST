@@ -10,29 +10,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Contract tests for the Timer resource (legacy: {@code Timer.groovy}).
+ * Contract tests for the Timer resource.
  *
- * <p>Reference fixture: {@code timer.json}.
- *
- * <p>Documented quirks:
  * <ul>
- *   <li>{@code GET /timer} returns a JSON ARRAY containing exactly one
- *       element, even though the timer is logically a singleton. Frontend
- *       reads {@code response[0].lastRequestedTimerStart}.</li>
- *   <li>{@code lastRequestedTimerStart} is the legacy
- *       {@code Timestamp.toString()} format, not ISO-8601.</li>
- *   <li>{@code POST /timer} resets {@code lastRequestedTimerStart} to NOW;
- *       returns plain-text {@code "result: 1"} (legacy used
- *       {@code LAST_INSERT_ID()} which is meaningless for an UPDATE — we
- *       emit the row id instead for parity-shaped output). The Quarkus
- *       port preserves this. Wired to {@code Countdown.tsx} reset control
- *       (re-confirmed in use 2026-05-14 — the original audit missed it).</li>
+ *   <li>{@code GET /timer} returns a JSON array containing exactly one
+ *       {@code {id, lastRequestedTimerStart}} element.</li>
+ *   <li>{@code lastRequestedTimerStart} is a {@code Timestamp.toString()}
+ *       string, not ISO-8601.</li>
+ *   <li>{@code POST /timer} resets the timestamp to NOW and returns
+ *       {@code text/plain} {@code "result: <id>"}.</li>
  * </ul>
  */
 class TimerContractTest extends ContractSuite {
 
     @Test
-    void getTimer_returnsSingleElementArrayWithLegacyTimestamp() {
+    void getTimer_returnsSingleElementArrayWithTimestamp() {
         JsonNode body = given()
                 .when().get("/timer")
                 .then()
@@ -51,8 +43,8 @@ class TimerContractTest extends ContractSuite {
         assertTrue(entry.get("id").isInt(), "id must be an int");
 
         String ts = entry.get("lastRequestedTimerStart").asText();
-        assertThat("lastRequestedTimerStart must be in legacy Timestamp format",
-                ts, matchesPattern(LEGACY_TIMESTAMP_REGEX));
+        assertThat("lastRequestedTimerStart must be in wire Timestamp format",
+                ts, matchesPattern(WIRE_TIMESTAMP_REGEX));
     }
 
     @Test
@@ -75,8 +67,7 @@ class TimerContractTest extends ContractSuite {
                 .contentType("text/plain")
                 .extract().body().asString();
 
-        // Legacy emitted "result: <last-insert-id>"; the Quarkus port mirrors
-        // the shape with the singleton row id.
+        // Body shape: "result: <id>".
         assertThat("POST /timer body must start with 'result:'",
                 body, matchesPattern("^result:\\s*\\d+\\s*$"));
 
@@ -85,8 +76,8 @@ class TimerContractTest extends ContractSuite {
                 .then().statusCode(200)
                 .extract().body().jsonPath().getString("[0].lastRequestedTimerStart");
 
-        assertThat("lastRequestedTimerStart should still match the legacy format after POST",
-                after, matchesPattern(LEGACY_TIMESTAMP_REGEX));
+        assertThat("lastRequestedTimerStart should still match the wire format after POST",
+                after, matchesPattern(WIRE_TIMESTAMP_REGEX));
         assertTrue(after.compareTo(before) > 0,
                 "POST /timer must advance lastRequestedTimerStart — before=" + before + " after=" + after);
     }

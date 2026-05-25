@@ -19,39 +19,25 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Tournament pairing logic — port of legacy
- * {@code RandomTournament.groovy}, {@code LastFirstTournament.groovy},
- * and {@code AwesomeAlgorithmTournament.groovy} (whose pairing brain is
- * {@code AdditionalUtil.generateAwesomeList}).
- *
- * <p>The three algorithms are kept distinct on purpose; they have
- * subtly different shapes (random returns flat, the others wrap in
- * rounds) and different selection logic. The "awesome" port is a
- * faithful, mechanical translation of the legacy Java in
- * {@code AdditionalUtil.java} — no behavior changes, no refactor.
- * Phase 6 of the migration plan is the place to clean that up.
+ * Tournament pairing logic for the three algorithms. Random returns a flat
+ * list of games; last-first and awesome wrap games in rounds.
  */
 @ApplicationScoped
 public class TournamentPairingService {
 
-    /**
-     * Legacy {@code MoreUtil.getGamesForThisManyHoursBackInTime("1", "")}
-     * window: the awesome algorithm only weighs games from the last hour
-     * when scoring pairing freshness.
-     */
+    /** Awesome algorithm only weighs games from the last hour for freshness scoring. */
     private static final int AWESOME_HOURS_BACK = 1;
 
     /**
-     * Legacy threshold for "a meaningful break": if two consecutive games
-     * are more than 30 minutes apart, the older one (and everything before
-     * it) is excluded from the freshness-weighting window.
+     * A break longer than this between consecutive games causes the awesome
+     * algorithm to stop walking further back when assigning round weights.
      */
     private static final int THRESHOLD_IN_MINUTES = 30;
 
-    /** Legacy cap on how many rounds back the awesome algorithm walks. */
+    /** Maximum number of past rounds the awesome algorithm considers. */
     private static final int MAX_NUMBER_OF_ROUNDS_BACK = 25;
 
-    /** Legacy retry count for the pair-shuffle uniqueness search. */
+    /** Retry count for the pair-shuffle uniqueness search. */
     private static final int CHOSEN_NUMBER_OF_TRIES = 10;
 
     // -------------------------------------------------------------------
@@ -73,8 +59,7 @@ public class TournamentPairingService {
 
         int count = 0;
         while (!randomPlayerNames.isEmpty()) {
-            // Legacy ordering: red_1, blue_1, red_2, blue_2 — a quirk worth
-            // preserving so output diffs against the legacy backend stay clean.
+            // Slot fill order: red_1, blue_1, red_2, blue_2.
             String playerRed1 = randomPlayerNames.poll();
             String playerBlue1 = randomPlayerNames.poll();
             String playerRed2 = randomPlayerNames.poll();
@@ -94,9 +79,8 @@ public class TournamentPairingService {
     // -------------------------------------------------------------------
 
     /**
-     * Port of {@code LastFirstTournament.generateGames}. Sorts players
-     * by their last-played timestamp (so least-recently-played go first),
-     * trims to the count we need based on the table-saturation rules,
+     * Sorts players by their last-played timestamp (least-recently-played
+     * first), trims to the count needed by the table-saturation rules,
      * shuffles, and pairs off four-at-a-time.
      */
     public List<TournamentGameRoundDto> generateLastFirst(GamesPostRequestDto request) {
@@ -127,8 +111,8 @@ public class TournamentPairingService {
                 String playerBlue1 = realList.poll();
                 String playerRed2 = realList.poll();
                 String playerBlue2 = realList.poll();
-                // Legacy quirk: skip games where blue has no first player —
-                // means we ran out before completing a 2-on-2.
+                // Skip games where blue has no first player — means we ran
+                // out before completing a 2-on-2.
                 if (playerBlue1 != null) {
                     games.add(TournamentGameMapper.synthetic(
                             playerRed1, playerRed2, playerBlue1, playerBlue2));
@@ -147,12 +131,10 @@ public class TournamentPairingService {
     // -------------------------------------------------------------------
 
     /**
-     * Port of {@code AwesomeAlgorithmTournament.generateGames} +
-     * {@code AdditionalUtil.generateAwesomeList}. Faithful mechanical
-     * translation — do not refactor, intentional behaviors are preserved
-     * including: the doubling points-at-stake hack, the shuffle/retry
-     * uniqueness search ({@value #CHOSEN_NUMBER_OF_TRIES} attempts), and
-     * the "matches alone count double" buddy-score rule.
+     * Pairing algorithm with a freshness-weighting heuristic: players who
+     * have just played together rank lower as partners. Runs
+     * {@value #CHOSEN_NUMBER_OF_TRIES} shuffle-retries and keeps the
+     * uniqueness-best result.
      */
     public List<TournamentGameRoundDto> generateAwesome(GamesPostRequestDto request) {
         List<GameDto> result = new ArrayList<>();
@@ -168,9 +150,9 @@ public class TournamentPairingService {
         LinkedList<String> newRealList =
                 generateAwesomeList(maxPlayersNeeded, namesOfAvailablePlayers);
 
-        // NOTE the slot order vs. random/last-first: the awesome
-        // algorithm fills red_1, red_2, blue_1, blue_2 — different from
-        // random's red_1, blue_1, red_2, blue_2. Preserve.
+        // Slot fill order: red_1, red_2, blue_1, blue_2 (differs from the
+        // random / last-first algorithms which fill red_1, blue_1, red_2,
+        // blue_2). Frontend tolerates either.
         LinkedList<String> realList = newRealList;
         int count = 0;
         while (!realList.isEmpty()) {
@@ -191,13 +173,10 @@ public class TournamentPairingService {
     }
 
     // -------------------------------------------------------------------
-    // generateAwesomeList — faithful port of legacy AdditionalUtil
+    // generateAwesomeList internals
     // -------------------------------------------------------------------
 
-    /**
-     * Inner-class mirror of legacy {@code AdditionalUtil.Pair}.
-     * Mutable, kept package-private to mirror legacy semantics.
-     */
+    /** Mutable pair of player names used by the freshness-scoring search. */
     private static final class Pair {
         String player1;
         String player2;
@@ -214,14 +193,14 @@ public class TournamentPairingService {
     }
 
     /**
-     * Faithful port of {@code AdditionalUtil.generateAwesomeList}.
-     * Don't refactor — Phase 6 of the migration plan tackles this.
+     * Walks recent games to score how recently each pair has played
+     * together, then runs a shuffle-retry uniqueness search to pick a
+     * fresh-feeling ordering of {@code maxPlayersNeeded} players.
      */
     private LinkedList<String> generateAwesomeList(
             int maxPlayersNeeded, LinkedList<String> namesOfAvailablePlayers) {
-        // Get all matches 1 hour back. Legacy used MoreUtil.getGamesForThisManyHoursBackInTime("1", "").
         List<Game> games = Game.<Game>find(
-                "timestamp > ?1 ORDER BY id DESC",
+                "timestamp > ?1 AND deletedAt IS NULL ORDER BY id DESC",
                 LocalDateTime.now().minusHours(AWESOME_HOURS_BACK)).list();
 
         int maxNumberOfRoundsBack = MAX_NUMBER_OF_ROUNDS_BACK;
@@ -236,8 +215,6 @@ public class TournamentPairingService {
                 currentLastUpdatedDate = gameLastUpdatedDate;
             }
 
-            // Compute milliseconds between the previous game and this one,
-            // mirroring legacy's Date.getTime() arithmetic.
             long fromCurrentLastToThis = toEpochMillis(currentLastUpdatedDate)
                     - toEpochMillis(gameLastUpdatedDate);
 
@@ -260,16 +237,16 @@ public class TournamentPairingService {
         games = gamesToLookAt;
 
         // Walk oldest-to-newest, doubling points_at_stake as the round
-        // index advances. The legacy comment calls this "a hack" — it
-        // weights freshness exponentially so we punish recent-pair repeats
-        // hardest. We mutate the entity in-memory only; nothing is persisted.
+        // index advances. Exponentially weights freshness so recent-pair
+        // repeats are punished hardest. In-memory mutation only — never
+        // persisted (the resource is @Transactional(NEVER)).
         Collections.reverse(games);
 
         int currentValueForGame = 1;
         String currentLastUpdated = "";
 
         for (Game game : games) {
-            String gameLastUpdated = legacyTimestampString(game.timestamp);
+            String gameLastUpdated = wireTimestampString(game.timestamp);
 
             if (!currentLastUpdated.equals(gameLastUpdated)) {
                 if (!currentLastUpdated.equals("")) {
@@ -277,9 +254,8 @@ public class TournamentPairingService {
                 }
                 currentLastUpdated = gameLastUpdated;
             }
-            // Mutates the loaded entity in memory only — we are not in a
-            // transaction and Panache won't flush this back. Mirrors legacy
-            // setPoints_at_stake(...) which was likewise transient.
+            // In-memory mutation only — the resource is @Transactional(NEVER)
+            // so Hibernate cannot flush these back.
             game.pointsAtStake = currentValueForGame;
         }
 
@@ -441,9 +417,6 @@ public class TournamentPairingService {
 
             int numberOfPlayers = certainPlayers.size();
             int playersForLastTable = numberOfPlayers % 4;
-            // (Legacy unused: boolean unevenNumberOfPlayers — left out
-            // since it has no observable effect.)
-
             int index = 0;
             Pair currentPair = null;
             LinkedList<Pair> allPairs = new LinkedList<>();
@@ -523,15 +496,12 @@ public class TournamentPairingService {
     // -------------------------------------------------------------------
 
     /**
-     * Port of legacy {@code MoreUtil.playersLastPlayed} but used here
-     * <em>only</em> by the last-first algorithm (the
-     * {@code /statisticsPlayersLastPlayed} endpoint has its own
-     * resource that keeps the same shape on the wire).
+     * Map of player name → most-recent-game epoch-millis. Used by the
+     * last-first algorithm to bias selection toward least-recently-played.
      */
     private Map<String, Long> playersLastPlayed() {
         Map<String, Long> result = new HashMap<>();
-        // Single-pass aggregation — collapses the legacy N+1.
-        List<Game> all = Game.<Game>listAll();
+        List<Game> all = Game.<Game>find("deletedAt IS NULL").list();
         for (Game g : all) {
             consider(result, g.playerRed1, g.timestamp);
             consider(result, g.playerRed2, g.timestamp);
@@ -551,11 +521,9 @@ public class TournamentPairingService {
     }
 
     /**
-     * Legacy table-saturation rules: cap players at the number of full
-     * tables that fit (one table = 4 players), but always include
-     * everyone when the count is small enough to make one extra table
-     * with three or two. Copied verbatim from
-     * {@code AwesomeAlgorithmTournament.generateGames}.
+     * Table-saturation rule. Cap players at the number of full tables that
+     * fit (4 per table) but include everyone when the available count makes
+     * one extra table of 3 or 2 viable.
      */
     static int adjustedMaxPlayersNeeded(int availablePlayersCount, int numberOfGames) {
         int maxPlayersNeeded = 4 * numberOfGames;
@@ -586,26 +554,25 @@ public class TournamentPairingService {
         return names;
     }
 
-    /** Mirrors legacy {@code Timestamp.getTime()} conversion via the JVM default zone. */
+    /** {@link LocalDateTime} → epoch-millis via the JVM default zone. */
     private static long toEpochMillis(LocalDateTime ts) {
         return java.sql.Timestamp.valueOf(ts).getTime();
     }
 
     /**
-     * Legacy {@code Timestamp.toString()} formatting — used by the awesome
-     * algorithm purely as a string-equality bucket key when grouping games
-     * into "rounds" (same-string == same round).
+     * {@link LocalDateTime} → wire-format string. Used as a string-equality
+     * bucket key when grouping games into "rounds" (same-string == same round).
      */
-    private static String legacyTimestampString(LocalDateTime ts) {
+    private static String wireTimestampString(LocalDateTime ts) {
         return java.sql.Timestamp.valueOf(ts).toString();
     }
 
-    /** Treat a missing last-played as 0L (effectively "never played, sort first"). */
+    /** Treat a missing last-played as 0L ("never played, sort first"). */
     private static long nullSafe(Long v) {
         return v == null ? 0L : v;
     }
 
-    /** Standard "sort a Map by value ascending into a LinkedHashMap" helper from legacy. */
+    /** Sort a {@code Map} by value ascending, returning a {@link LinkedHashMap}. */
     private static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
         list.sort(Comparator.comparing(Map.Entry::getValue));

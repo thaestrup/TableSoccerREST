@@ -2,6 +2,7 @@ package com.foosball.api;
 
 import com.foosball.domain.Game;
 import com.foosball.domain.Period;
+import com.foosball.domain.Player;
 import com.foosball.dto.PointsPlayerDto;
 import com.foosball.service.EloService;
 import jakarta.inject.Inject;
@@ -12,36 +13,22 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Points-per-Player resource — port of legacy {@code PointsPrPlayer.groovy}.
+ * {@code GET /pointsPrPlayer/{period}} — leaderboard for {@code hour|day|
+ * week|month|alltime}. Returns a JSON array of {@code {position, points,
+ * numberOfGames, name}} sorted by {@code points DESC}; ties produce
+ * repeated position values.
  *
- * <p>Wire contract preserved: {@code GET /pointsPrPlayer/{period}} returns a
- * JSON array of {@code {position, points, numberOfGames, name}} objects,
- * sorted by {@code points DESC}, with tied scores producing repeated
- * {@code position} values (e.g. {@code 1, 1, 3, 3}).
- *
- * <p>Period dispatch matches the legacy switch:
- * <ul>
- *   <li>{@code alltime} — applies the {@code newElo} branch (1500 starting
- *       score, ± {@code points_at_stake} per game).</li>
- *   <li>{@code month}/{@code week}/{@code day}/{@code hour} — fall through
- *       the legacy switch with {@code filter == ""} and reach the
- *       {@code else} branch (same delta math, 0 starting score).</li>
- * </ul>
- *
- * <p>Dropped vs. legacy: {@code POST /pointsPrPlayer/...},
- * {@code GET /pointsPrPlayer/} (no period), and the filter tokens
- * {@code alltime-onlylunch}, {@code alltime-ratiofocus},
- * {@code alltime-elo} — frontend never calls them
- * (see FRONTEND-USAGE.md).
- *
- * <p>Unlike the legacy service the games are read directly from the
- * database; the legacy {@code POST} branch fetched
- * {@code http://localhost:5050/games} over HTTP from itself, which the port
- * skips.
+ * <p>Entries whose name no longer exists in {@code tbl_players} (the
+ * player has been deleted but their games remain) are dropped from the
+ * response entirely. Existing players' points and positions are
+ * unchanged — their wins/losses against the deleted player still count
+ * in the underlying Elo math.
  */
 @Path("/pointsPrPlayer")
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,22 +40,38 @@ public class PointsResource {
     @GET
     @Path("/{period}")
     public List<PointsPlayerDto> getByPeriod(@PathParam("period") String token) {
-        // Return type is List<PointsPlayerDto> rather than Response so
-        // Quarkus's native-image static analysis can see the payload type
-        // and auto-register PointsPlayerDto for reflection. Wrapping in
-        // Response hides the generic and produces a runtime
-        // "no serializer found" error on the native binary.
         Period p = Period.fromToken(token).orElseThrow(NotFoundException::new);
         LocalDateTime cutoff = LocalDateTime.now().minusHours(p.hoursBack);
-        // Order by id ASC to mirror the legacy MoreUtil "elo" branch's
-        // chronological ordering. The newElo math is order-independent in
-        // aggregate (each game adds/subtracts a constant), but iterating in
-        // insertion order keeps log output stable and matches the legacy
-        // code path most closely.
-        List<Game> games = Game.<Game>find("timestamp > ?1 ORDER BY id ASC", cutoff).list();
+        List<Game> games = Game.<Game>find(
+                "timestamp > ?1 AND deletedAt IS NULL ORDER BY id ASC",
+                cutoff).list();
 
-        return (p == Period.ALLTIME)
+        List<PointsPlayerDto> ranked = (p == Period.ALLTIME)
                 ? eloService.rankWithEloStart(games)
                 : eloService.rankWithDefaultStart(games);
+
+        Set<String> activeNames = Player.<Player>listAll().stream()
+                .map(pl -> pl.name)
+                .collect(Collectors.toSet());
+
+        List<PointsPlayerDto> filtered = ranked.stream()
+                .filter(r -> activeNames.contains(r.name()))
+                .toList();
+
+        // Renumber positions starting at 1 after filtering; ties (same points
+        // in adjacent rows) keep the same position.
+        List<PointsPlayerDto> result = new ArrayList<>(filtered.size());
+        int currentPos = 0;
+        int currentPoints = Integer.MIN_VALUE;
+        for (int i = 0; i < filtered.size(); i++) {
+            PointsPlayerDto r = filtered.get(i);
+            if (r.points() != currentPoints) {
+                currentPos = i + 1;
+                currentPoints = r.points();
+            }
+            result.add(new PointsPlayerDto(
+                    currentPos, r.points(), r.numberOfGames(), r.name()));
+        }
+        return result;
     }
 }

@@ -3,20 +3,11 @@ package com.foosball.domain;
 import java.util.Optional;
 
 /**
- * Time-window filter shared by {@code GET /games/{token}} and
- * {@code GET /pointsPrPlayer/{token}}.
- *
- * <p>The wire token is lowercase (matches what the React frontend sends).
- * Conversion is via {@link #fromToken(String)} which returns
- * {@link Optional#empty()} for unknown tokens — callers decide whether
- * to fall through to a player-name lookup (legacy behavior on
- * {@code /games/{token}}) or 404 (cleaner behavior on
- * {@code /pointsPrPlayer/{token}}).
- *
- * <p>The legacy backend supported additional filter tokens on
- * {@code /pointsPrPlayer/} ({@code alltime-onlylunch},
- * {@code alltime-ratiofocus}, {@code alltime-elo}). These are dropped
- * per FRONTEND-USAGE.md — the React UI never requests them.
+ * Time-window filter for {@code GET /games/{token}} and
+ * {@code GET /pointsPrPlayer/{token}}. Wire tokens are lowercase.
+ * {@link #fromToken(String)} returns {@link Optional#empty()} for
+ * unrecognized tokens; callers decide whether to 404 or fall through
+ * (e.g. {@code /games/{token}} treats unknown tokens as a player name).
  */
 public enum Period {
     HOUR("hour", 1),

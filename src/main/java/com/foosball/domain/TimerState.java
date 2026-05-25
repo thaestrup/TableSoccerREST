@@ -8,12 +8,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-/**
- * JPA entity for the legacy {@code tbl_timer} table.
- *
- * <p>Single-row mailbox table: holds the timestamp of the last requested
- * timer start.
- */
+/** JPA entity for {@code tbl_timer} — a single-row mailbox holding the last-requested timer start. */
 @Entity
 @Table(name = "tbl_timer")
 public class TimerState extends PanacheEntityBase {

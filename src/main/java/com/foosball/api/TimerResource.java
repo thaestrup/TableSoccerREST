@@ -16,28 +16,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Timer resource — port of legacy {@code TimerActions.groovy}, extended with
- * a WebSocket push side-channel.
+ * Timer endpoints.
  *
- * <p>Wire contract preserved:
  * <ul>
- *   <li>{@code GET /timer} returns a JSON <em>array</em> with a single
- *       {@code {id, lastRequestedTimerStart}} element, even though the
- *       underlying table is a singleton mailbox row. Frontend reads
- *       {@code response[0].lastRequestedTimerStart}.</li>
+ *   <li>{@code GET /timer} returns a single-element JSON array
+ *       {@code [{id, lastRequestedTimerStart}]}.</li>
  *   <li>{@code POST /timer} resets {@code lastRequestedTimerStart} to now,
- *       returning a plain-text result string (legacy emitted
- *       {@code "result: <last-insert-id>"} — we emit a similarly-shaped
- *       string for parity), AND broadcasts the new {@link TimerActionDto}
- *       to every subscriber on {@link TimerSocket} (path {@code /ws/timer}).</li>
+ *       returns plain text {@code "result: <id>"}, and broadcasts the new
+ *       {@link TimerActionDto} to every subscriber on {@link TimerSocket}.</li>
  * </ul>
- *
- * <p>The push channel removes the legacy 1 Hz polling on {@code GET /timer}
- * once the frontend swaps to a WS subscription. Polling stays available for
- * any consumer that can't / doesn't want to use WS.
- *
- * <p>The per-request {@code MoreUtil.ensureTimerTableExist()} DDL call is
- * dropped — Flyway V1 owns schema creation now.
  */
 @Path("/timer")
 @Produces(MediaType.APPLICATION_JSON)
@@ -69,10 +56,8 @@ public class TimerResource {
         row.lastRequestedTimerStart = LocalDateTime.now();
         row.persist();
 
-        // Broadcast to every TimerSocket subscriber. The send is best-effort
-        // and non-blocking (sendTextAndAwait would tie the HTTP response to
-        // the slowest WS client). If the broadcast fails (no subscribers,
-        // bad client), the GET fallback path still picks up the new state.
+        // Broadcast best-effort and non-blocking; the HTTP response shouldn't
+        // wait on the slowest WS subscriber.
         TimerActionDto dto = TimerMapper.toDto(row);
         connections.findByEndpointId(TimerSocket.class.getName())
                 .forEach(c -> c.sendText(dto).subscribe().with(

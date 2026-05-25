@@ -14,35 +14,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Contract tests for the Tournament resources (legacy:
- * {@code AwesomeAlgorithmTournament.groovy}, {@code LastFirstTournament.groovy},
- * {@code RandomTournament.groovy}).
+ * Contract tests for the Tournament endpoints.
  *
- * <p>Reference fixtures: {@code tournament-awesome.json},
- * {@code tournament-lastfirst.json}, {@code tournament-random.json}.
- *
- * <p>Documented quirks:
  * <ul>
- *   <li>Awesome and Last-first return a "rounds wrapper":
+ *   <li>Awesome and Last-first return a rounds wrapper:
  *       {@code [{tournamentGames: [Game, ...]}, ...]}.</li>
- *   <li>Random returns a flat {@code [Game, ...]} array (NO rounds
- *       wrapper). The shape divergence is intentional and the frontend
- *       branches on it. Preserve.</li>
+ *   <li>Random returns a flat {@code [Game, ...]} array — the frontend
+ *       branches on this shape.</li>
  *   <li>Synthesized tournament games use sentinel values:
- *       {@code id=-1}, {@code points_at_stake=-1}, {@code winning_table=-1},
- *       {@code match_winner=""} (empty string, NOT null).</li>
- *   <li>{@code lastUpdated} on tournament games carries up to nanosecond
- *       precision (e.g. {@code "...:57.894"}); the
- *       {@link ContractSuite#LEGACY_TIMESTAMP_REGEX} regex tolerates 1-9
- *       fractional digits.</li>
+ *       {@code id=-1}, {@code points_at_stake=-1},
+ *       {@code winning_table=-1}, {@code match_winner=""}.</li>
+ *   <li>{@code lastUpdated} on tournament games can carry up to nanosecond
+ *       precision; {@link ContractSuite#WIRE_TIMESTAMP_REGEX} tolerates
+ *       1–9 fractional digits.</li>
  * </ul>
  */
 class TournamentContractTest extends ContractSuite {
 
-    /**
-     * Eight players, all confirmed present in {@code players.json}. The legacy
-     * algorithm validates names against the DB before generating pairings.
-     */
+    /** Eight players, all present in the seed data. */
     private static final String REQUEST_BODY = "{"
             + "\"numberOfGames\":2,"
             + "\"players\":["
@@ -130,7 +119,7 @@ class TournamentContractTest extends ContractSuite {
         for (String k : EXPECTED_KEYS) {
             assertTrue(game.has(k), algo + ": tournament game missing key '" + k + "'");
         }
-        // Sentinel values per legacy AdditionalUtil.
+        // Sentinel values for synthetic tournament games.
         assertEquals(-1, game.get("id").asInt(), algo + ": tournament games use id=-1");
         assertEquals(-1, game.get("points_at_stake").asInt(),
                 algo + ": tournament games use points_at_stake=-1");
@@ -149,7 +138,7 @@ class TournamentContractTest extends ContractSuite {
         }
 
         String ts = game.get("lastUpdated").asText();
-        assertThat(algo + ": lastUpdated must be in legacy Timestamp format",
-                ts, matchesPattern(LEGACY_TIMESTAMP_REGEX));
+        assertThat(algo + ": lastUpdated must be in Timestamp.toString() wire format",
+                ts, matchesPattern(WIRE_TIMESTAMP_REGEX));
     }
 }

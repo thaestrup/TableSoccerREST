@@ -11,9 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
-/**
- * JPA entity for the legacy {@code tbl_players} table.
- */
+/** JPA entity for {@code tbl_players}. */
 @Entity
 @Table(name = "tbl_players")
 public class Player extends PanacheEntityBase {

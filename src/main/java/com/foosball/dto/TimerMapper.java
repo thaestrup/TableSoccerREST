@@ -5,10 +5,8 @@ import java.sql.Timestamp;
 
 /**
  * Converter from {@link TimerState} entity to {@link TimerActionDto} wire shape.
- * Kept static and stateless — no CDI involved.
- *
- * <p>{@code lastRequestedTimerStart} bridges {@code LocalDateTime} (entity)
- * and the legacy {@link Timestamp#toString()} string format on the wire.
+ * {@code lastRequestedTimerStart} bridges {@code LocalDateTime} (entity)
+ * and the {@link Timestamp#toString()} string on the wire.
  */
 public final class TimerMapper {
 

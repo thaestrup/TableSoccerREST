@@ -10,18 +10,9 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Contract tests for the StatisticsPlayersLastPlayed endpoint
- * (legacy: {@code MoreUtil.playersLastPlayed} via {@code Ratpack.groovy}).
- *
- * <p>Reference fixture: {@code stats-last-played.json}.
- *
- * <p>Documented quirks:
- * <ul>
- *   <li>Returned as a JSON OBJECT keyed by player name (a
- *       {@code Record<string, number>}), NOT an array. Easy to misread
- *       given every other endpoint is array-shaped.</li>
- *   <li>Values are epoch-millis numbers.</li>
- * </ul>
+ * Contract tests for the {@code /statisticsPlayersLastPlayed} endpoint.
+ * Returned as a JSON object keyed by player name (NOT an array) with
+ * epoch-millis numeric values.
  */
 class StatisticsContractTest extends ContractSuite {
 

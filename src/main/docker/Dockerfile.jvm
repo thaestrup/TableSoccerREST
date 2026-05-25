@@ -26,11 +26,9 @@ RUN ./mvnw -B package -DskipTests
 ## ---- Stage 2: minimal JRE runtime -----------------------------------------
 FROM eclipse-temurin:21-jre
 
-# Pin JVM default timezone to Europe/Copenhagen. The TZ env var is honored
-# by the JVM at startup, which makes Timestamp.toString() (legacy wire
-# format) and any LocalDateTime.now() produce wall-clock values in the
-# office zone. Paired with quarkus.hibernate-orm.jdbc.timezone in
-# application.properties so the JDBC session zone matches.
+# JVM default timezone. Paired with quarkus.hibernate-orm.jdbc.timezone so
+# the JDBC session zone matches. Change both together if the service moves
+# out of Copenhagen.
 ENV TZ=Europe/Copenhagen
 
 # Temurin's image runs as root by default; create an unprivileged user. uid

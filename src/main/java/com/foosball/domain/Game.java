@@ -11,13 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
-/**
- * JPA entity for the legacy {@code tbl_fights} table.
- *
- * <p>Note: the entity is named {@code Game} but the underlying table is
- * historically {@code tbl_fights}. The legacy column {@code points_at_steake}
- * (typo) is renamed to {@code points_at_stake} by the Flyway migration.
- */
+/** JPA entity for {@code tbl_fights}. */
 @Entity
 @Table(name = "tbl_fights")
 public class Game extends PanacheEntityBase {
@@ -59,4 +53,8 @@ public class Game extends PanacheEntityBase {
 
     @Column(name = "winning_table", nullable = false)
     public int winningTable;
+
+    /** Soft-delete marker. {@code null} for live rows. */
+    @Column(name = "deleted_at")
+    public LocalDateTime deletedAt;
 }

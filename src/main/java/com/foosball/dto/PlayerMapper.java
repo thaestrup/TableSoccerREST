@@ -6,10 +6,8 @@ import java.time.LocalDateTime;
 
 /**
  * Converters between {@link Player} entity and {@link PlayerDto} wire shape.
- * Kept static and stateless — no CDI involved.
- *
- * <p>{@code oprettet} bridges {@code LocalDateTime} (entity) and the legacy
- * {@link Timestamp#toString()} string format on the wire.
+ * {@code oprettet} bridges {@code LocalDateTime} (entity) and the
+ * {@link Timestamp#toString()} string on the wire.
  */
 public final class PlayerMapper {
 

@@ -21,28 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Contract test for the {@code /ws/timer} WebSocket push channel.
+ * Contract test for the {@code /ws/timer} WebSocket push channel. On
+ * connect the server sends one {@code TimerActionDto} JSON frame; every
+ * {@code POST /timer} broadcasts a fresh frame to every open subscription.
  *
- * <p><strong>Not a parity test.</strong> The legacy Ratpack backend never had a
- * WebSocket endpoint — the React frontend used to poll {@code GET /timer}
- * every second. The Quarkus port adds {@link com.foosball.api.TimerSocket}
- * as a push side-channel; this file pins the wire contract so the frontend's
- * subscription path keeps working.
- *
- * <p>If the backend under test lacks the endpoint (the handshake fails with
- * 404 or the connection refuses), the test self-skips via
- * {@link org.junit.jupiter.api.Assumptions#assumeTrue(boolean)} — that lets
- * the suite stay hostable against the legacy backend without false failures.
- *
- * <p>Wire contract:
- * <ul>
- *   <li>On connect, the server sends one {@code TimerActionDto} JSON frame
- *       reflecting the current singleton row.</li>
- *   <li>Every {@code POST /timer} triggers a broadcast of the new
- *       {@code TimerActionDto} to every open subscription. The frame is
- *       always a single text message of complete JSON (no chunking
- *       within an individual reset event).</li>
- * </ul>
+ * <p>The test self-skips via {@link org.junit.jupiter.api.Assumptions}
+ * if the backend under test doesn't expose the endpoint (handshake
+ * fails / connection refused).
  */
 class TimerSocketContractTest extends ContractSuite {
 
@@ -54,8 +39,6 @@ class TimerSocketContractTest extends ContractSuite {
         try {
             ws = openSocket(wsUri, inbox);
         } catch (Throwable handshakeFail) {
-            // Legacy backend doesn't have /ws/timer — skip cleanly so the
-            // suite still runs against http://localhost:5050.
             assumeTrue(false, "Backend at " + wsUri + " has no /ws/timer: " + handshakeFail.getMessage());
             return; // unreachable, but keeps the compiler happy
         }
@@ -83,7 +66,7 @@ class TimerSocketContractTest extends ContractSuite {
             assertTimerActionShape(pushedDto);
             String after = pushedDto.get("lastRequestedTimerStart").asText();
 
-            // Legacy Timestamp.toString() is lexicographically orderable.
+            // Timestamp.toString() wire format is lexicographically orderable.
             assertTrue(after.compareTo(before) > 0,
                     "broadcast must advance lastRequestedTimerStart: before=" + before
                             + " after=" + after);
@@ -129,11 +112,6 @@ class TimerSocketContractTest extends ContractSuite {
         return futureWs.get(5, TimeUnit.SECONDS);
     }
 
-    /**
-     * Asserts the wire shape of a {@code TimerActionDto} as documented in
-     * {@link TimerContractTest} — kept inline so this test file is
-     * self-contained against the legacy timestamp regex on the base class.
-     */
     private static void assertTimerActionShape(JsonNode dto) {
         assertNotNull(dto, "DTO must not be null");
         assertTrue(dto.isObject(), "DTO must be a JSON object");
@@ -141,7 +119,7 @@ class TimerSocketContractTest extends ContractSuite {
         assertTrue(dto.get("id").isInt(), "'id' must be an int");
         assertTrue(dto.has("lastRequestedTimerStart"), "missing 'lastRequestedTimerStart'");
         String ts = dto.get("lastRequestedTimerStart").asText();
-        assertThat("lastRequestedTimerStart must be in legacy Timestamp format",
-                ts, matchesPattern(LEGACY_TIMESTAMP_REGEX));
+        assertThat("lastRequestedTimerStart must be in Timestamp.toString() wire format",
+                ts, matchesPattern(WIRE_TIMESTAMP_REGEX));
     }
 }

@@ -10,18 +10,9 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Contract tests for the Configuration resource (legacy: {@code Configuration.groovy}).
- *
- * <p>Reference fixture: {@code configuration.json}.
- *
- * <p>Documented quirks:
- * <ul>
- *   <li>Returned as a JSON array of {@code {name, value}} pairs (not a
- *       map). The frontend ({@code FoosballUnity} configuration helpers)
- *       reduces it client-side to a map.</li>
- *   <li>The frontend reads {@code numberOfTables} and {@code nameTable<N>}
- *       keys; both must be present.</li>
- * </ul>
+ * Contract tests for the Configuration resource. Returned as a JSON array
+ * of {@code {name, value}} pairs; {@code numberOfTables} and
+ * {@code nameTable<N>} must be present.
  */
 class ConfigurationContractTest extends ContractSuite {
 

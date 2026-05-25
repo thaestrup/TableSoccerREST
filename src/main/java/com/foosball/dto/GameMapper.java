@@ -2,22 +2,11 @@ package com.foosball.dto;
 
 import com.foosball.domain.Game;
 import java.sql.Timestamp;
+import java.util.Set;
 
-/**
- * Converters between {@link Game} entity and {@link GameDto} wire shape.
- * Kept static and stateless — no CDI involved.
- *
- * <p>{@code lastUpdated} bridges {@code LocalDateTime} (entity) and the legacy
- * {@link Timestamp#toString()} string format on the wire (variable-precision
- * fractional seconds — never ISO-8601). Same approach as
- * {@link PlayerMapper#toDto} uses for {@code oprettet}.
- *
- * <p>Player slots that already contain the literal string {@code "null"}
- * (legacy quirk: legacy Groovy concatenated {@code Object.toString()} into
- * INSERTs) are passed through verbatim — they are real {@code String}
- * values in the DB column, not SQL NULLs.
- */
 public final class GameMapper {
+
+    public static final String DELETED_PLAYER = "Deleted player";
 
     private GameMapper() {}
 
@@ -34,6 +23,31 @@ public final class GameMapper {
                 g.winningTable);
     }
 
+    /**
+     * Same as {@link #toDto(Game)} but replaces any player-slot name not in
+     * {@code activeNames} with {@code "Deleted player"}. The
+     * {@code "null"}-string sentinel for empty back-row slots is preserved.
+     */
+    public static GameDto toDto(Game g, Set<String> activeNames) {
+        return new GameDto(
+                g.id,
+                mapName(g.playerRed1, activeNames),
+                mapName(g.playerRed2, activeNames),
+                mapName(g.playerBlue1, activeNames),
+                mapName(g.playerBlue2, activeNames),
+                Timestamp.valueOf(g.timestamp).toString(),
+                g.matchWinner,
+                g.pointsAtStake,
+                g.winningTable);
+    }
+
+    private static String mapName(String name, Set<String> activeNames) {
+        if (name == null || "null".equals(name) || activeNames.contains(name)) {
+            return name;
+        }
+        return DELETED_PLAYER;
+    }
+
     public static Game toEntity(GameDto dto) {
         Game g = new Game();
         g.playerRed1 = orNullString(dto.playerRed1());
@@ -48,17 +62,23 @@ public final class GameMapper {
     }
 
     /**
-     * Legacy quirk preservation: when the React frontend reports a 1v1
-     * or 2v1 game, the empty back-slot fields arrive as JSON {@code null}.
-     * The legacy Groovy backend concatenated {@code String.valueOf(null)}
-     * into INSERTs, which produced the 4-character literal {@code "null"}
-     * stored in a {@code NOT NULL} column. The Quarkus port keeps the
-     * column {@code NOT NULL} (and the entity {@code @NotNull}) to match
-     * the schema, so we translate inbound JSON null → {@code "null"} here.
-     * Subsequent reads emit the same {@code "null"} string on the wire,
-     * which the frontend's {@code GameSchema} transforms back to JS null.
-     * See FINDINGS-backend.md "Legacy parity quirks" section.
+     * Applies the editable subset of {@code dto} onto {@code target}.
+     * {@code id} and {@code timestamp} are preserved; all other fields
+     * are replaced. Used by {@code PUT /games/{id}}.
      */
+    public static void applyEditable(GameDto dto, Game target) {
+        target.playerRed1 = orNullString(dto.playerRed1());
+        target.playerRed2 = orNullString(dto.playerRed2());
+        target.playerBlue1 = orNullString(dto.playerBlue1());
+        target.playerBlue2 = orNullString(dto.playerBlue2());
+        target.matchWinner = dto.matchWinner();
+        target.pointsAtStake = dto.pointsAtStake();
+        target.winningTable = dto.winningTable();
+    }
+
+    // JSON null on a back-row slot → the literal "null" string sentinel.
+    // tbl_fights.player_*_2 is NOT NULL; the React GameSchema transforms
+    // "null" back into JS null on read.
     private static String orNullString(String s) {
         return s == null ? "null" : s;
     }
