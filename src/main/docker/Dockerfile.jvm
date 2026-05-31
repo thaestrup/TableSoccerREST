@@ -13,6 +13,16 @@
 
 ## ---- Stage 1: Maven build via Temurin JDK ---------------------------------
 FROM eclipse-temurin:21-jdk AS build
+
+# eclipse-temurin's Ubuntu base ships without `unzip`. The Maven wrapper
+# silently switches its distribution URL from .zip to .tar.gz when unzip is
+# missing, but `distributionSha256Sum` in maven-wrapper.properties pins the
+# .zip checksum -- so the SHA check fails and mvnw aborts. Installing unzip
+# keeps the wrapper on the .zip path the checksum was generated for.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /code
 
 # Bring in wrapper, descriptor, and sources together. `dependency:go-offline`
