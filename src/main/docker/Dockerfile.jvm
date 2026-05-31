@@ -15,11 +15,15 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /code
 
-# Wrapper + descriptor first for dependency-layer caching.
+# Bring in wrapper, descriptor, and sources together. `dependency:go-offline`
+# used to live in its own RUN to cache dep downloads as a separate layer,
+# but it's unreliable with Quarkus -- the quarkus-maven-plugin resolves
+# extensions in a way the standard go-offline goal mishandles, so it fails
+# in clean CI environments. `package` does its own resolution and works.
+# The buildx GHA cache (cache-from: type=gha) preserves the underlying
+# layer across runs so we don't repeatedly pay the download cost in CI.
 COPY mvnw pom.xml /code/
 COPY .mvn /code/.mvn
-RUN ./mvnw -B dependency:go-offline -DskipTests
-
 COPY src /code/src
 RUN ./mvnw -B package -DskipTests
 
