@@ -1,0 +1,41 @@
+@startuml c4-container
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title FoosballUnity — C4 Container Diagram
+
+Person(organizer, "Tournament organizer", "Runs office foosball tournaments — creates games, watches rankings, controls the match timer.")
+Person(player, "Player", "Logs match results, browses leaderboards.")
+
+System_Boundary(stack, "FoosballUnity stack (podman compose)") {
+
+    Container(frontend, "Frontend", "React 18 + Vite + TypeScript + tanstack-react-query", "SPA. Renders players, games, rankings, tournament setup, match timer. Validates wire shapes with Zod. Talks to backend via single fetch wrapper at src/lib/api.ts.")
+
+    Container(backend, "Backend", "Quarkus 3.35 + Java 21 (RESTEasy Reactive + Hibernate-ORM-Panache)", "Stateless REST API on port 5051. Players / Games / Tournament generation / Elo rankings / Configuration / Timer. Flyway-managed schema migrations on startup.")
+
+    ContainerDb(db, "MariaDB", "MariaDB 10.11", "Persists players, fights (games), configuration entries, and the singleton match timer row.")
+}
+
+Rel(organizer, frontend, "Uses", "HTTPS")
+Rel(player,    frontend, "Uses", "HTTPS")
+
+Rel(frontend, backend, "JSON over HTTP", "fetch / GET, POST, PUT, DELETE")
+Rel(backend, db, "JDBC", "mariadb-java-client / port 3306")
+
+note right of backend
+  Replaces the retired Ratpack 1.6 / Groovy 2.5
+  service. Migration plan in /MIGRATION-PLAN.md.
+  Built as either:
+   - Dockerfile.jvm     temurin:21-jre  ~310 MB
+   - Dockerfile.native  Mandrel native  ~50  MB
+end note
+
+note right of db
+  Schema owned by Flyway migrations under
+  src/main/resources/db/migration/.
+  V1 init, V2 indices, V3 dev seed.
+  No more runtime CREATE TABLE.
+end note
+
+@enduml

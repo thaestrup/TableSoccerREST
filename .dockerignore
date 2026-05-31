@@ -1,6 +1,39 @@
-.git
-.gradle
-build
-bin
-classes
+# Build outputs
+target/
+build/
+
+# VCS
+.git/
+.gitignore
+.gitattributes
+
+# IDE / editor
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs / local state
 *.log
+.env
+.env.local
+
+# Docker / compose artifacts (don't recurse into other builds)
+**/.dockerignore
+
+# Tests we don't need at image build time -- keep src/test out of the build
+# context to avoid invalidating the cache on test-only edits. Mandrel and
+# Maven both honor -DskipTests anyway.
+src/test/
+
+# Keep the Maven wrapper jar -- mvnw needs it inside the build container.
+!.mvn/wrapper/maven-wrapper.jar

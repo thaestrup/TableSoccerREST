@@ -1,0 +1,65 @@
+####
+# Multi-stage build for the Quarkus application as a GraalVM native binary.
+#
+# Stage 1: build the native runner inside the Mandrel builder image, so a
+# contributor without a local Mandrel install can produce a working image.
+# Stage 2: copy only the runner binary into the minimal quarkus-micro-image.
+#
+# Build:
+#   podman build -f src/main/docker/Dockerfile.native -t foosball/backend-native .
+#
+# Run:
+#   podman run -i --rm -p 5051:5051 foosball/backend-native
+#
+# Build host needs ~6 GB RAM available to Mandrel.
+####
+
+## ---- Stage 1: native build via Mandrel ------------------------------------
+FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21 AS build
+
+USER root
+WORKDIR /code
+
+# Maven wrapper + descriptor first so the dependency layer caches independently
+# of source changes.
+COPY --chown=quarkus:quarkus mvnw pom.xml /code/
+COPY --chown=quarkus:quarkus .mvn /code/.mvn
+USER quarkus
+RUN ./mvnw -B dependency:go-offline -DskipTests
+
+# Now the source tree.
+COPY --chown=quarkus:quarkus src /code/src
+
+# Native build. -Pnative activates the profile already defined in pom.xml;
+# application.properties sets quarkus.native.container-build=false implicitly
+# here because we are *already inside* the Mandrel container.
+RUN ./mvnw -B package -Pnative -DskipTests -Dquarkus.native.container-build=false
+
+## ---- Stage 2: minimal runtime ---------------------------------------------
+FROM quay.io/quarkus/quarkus-micro-image:2.0
+WORKDIR /work/
+
+# Pin default timezone to Europe/Copenhagen. quarkus-micro-image is ubi9-micro
+# and does NOT ship the tzdata package, so the runtime can't resolve the zone
+# from system files alone. Two safeguards together cover that:
+#   - This TZ env var is what the JVM/native runtime reads on startup.
+#   - `-H:IncludeTimeZones=Europe/Copenhagen` in application.properties bakes
+#     the actual zone data into the native binary itself.
+ENV TZ=Europe/Copenhagen
+
+RUN chown 1001 /work \
+    && chmod "g+rwX" /work \
+    && chown 1001:root /work
+
+COPY --from=build --chown=1001:root --chmod=0755 /code/target/*-runner /work/application
+
+EXPOSE 5051
+USER 1001
+
+# HEALTHCHECK intentionally omitted: quarkus-micro-image:2.0 is built on
+# ubi9-micro and ships neither curl nor wget, and the runner binary has no
+# self-probing subcommand. Health is exposed at /q/health/ready via
+# quarkus-smallrye-health -- have the orchestrator (compose / k8s) probe it
+# from outside the container instead of baking a healthcheck in here.
+
+ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]
