@@ -56,6 +56,46 @@ To force the (smaller, slower-to-build) native image instead, point the compose
 `backend` service's `dockerfile:` at `src/main/docker/Dockerfile.native`.
 That build needs ~6 GB RAM for Mandrel — first build ~5 minutes.
 
+Run from the published image
+----------------------------
+
+Tagged releases (`vX.Y.Z`) are built and published to GitHub Container
+Registry by `.github/workflows/docker-publish.yml`. The JVM image is at:
+
+```
+ghcr.io/thaestrup/tablesoccerrest:latest      # most recent release
+ghcr.io/thaestrup/tablesoccerrest:1.0.0       # specific version
+```
+
+Pull and run against an external MariaDB:
+
+```
+podman run --rm -p 5051:5051 \
+    -e DB_URL='jdbc:mariadb://<host>:3306/nykreditfoosballunity?useSsl=false' \
+    -e DB_USER=football \
+    -e DB_PASSWORD=football \
+    -e ALLOWED_ORIGINS='https://foosball.example.com' \
+    ghcr.io/thaestrup/tablesoccerrest:latest
+```
+
+Flyway migrates the schema on startup, so the DB only needs to exist and be
+reachable — empty is fine. The container exposes `5051`; health endpoints
+`/q/health/ready` and `/q/health/live` are suitable for orchestrator probes.
+
+If the package is private (GHCR's default for new packages), authenticate
+first with a personal access token that has the `read:packages` scope:
+
+```
+echo $GHCR_TOKEN | podman login ghcr.io -u <github-username> --password-stdin
+```
+
+Cutting a release: tag the commit and push the tag — the workflow does the
+rest.
+
+```
+git tag v1.0.0 && git push origin v1.0.0
+```
+
 Run standalone (dev mode)
 -------------------------
 
